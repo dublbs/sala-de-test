@@ -42,6 +42,10 @@ button{font:inherit;cursor:pointer}
 .barra .lnk{background:none;border:0;color:var(--marca);text-decoration:underline;font-size:13px;padding:0 4px}
 .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#fff;color:var(--texto);border-radius:14px;padding:12px 18px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:30;max-width:min(560px,calc(100vw - 24px));display:none;line-height:1.5}
 .toast b{color:var(--marca)}
+.escala{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:18px}
+.escala button{height:52px;border-radius:12px;border:1.5px solid var(--linea);background:#fff;font:600 18px Poppins,system-ui,sans-serif;color:var(--texto);cursor:pointer}
+.escala button:hover{border-color:var(--marca)}.escala button.on{background:var(--marca);border-color:var(--marca);color:#fff}
+.escala-ext{display:flex;justify-content:space-between;font-size:12px;color:var(--suave);margin-top:6px}
 .punto{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e04646;margin-right:6px;animation:p 1.6s infinite}
 @keyframes p{50%{opacity:.3}}
 </style>
@@ -68,6 +72,17 @@ button{font:inherit;cursor:pointer}
   <h2 id="tNum">Tarea 1 de 3</h2>
   <p class="escenario" id="tEsc"></p>
   <div class="fila"><button class="btn" id="bEmpezar">Empezar la tarea</button></div>
+</div></div>
+
+<!-- Pregunta después de la tarea -->
+<div class="capa off" id="cSeq"><div class="tarjeta">
+  <h2 id="seqH">Tarea 1 · tu opinión</h2>
+  <h1 style="font-size:22px">¿Qué tan fácil o difícil fue esta tarea?</h1>
+  <div class="escala" id="escala">1234567</div>
+  <div class="escala-ext"><span>Muy difícil</span><span>Muy fácil</span></div>
+  <label for="seqTxt" style="display:block;font-size:13px;color:var(--suave);margin:18px 0 6px">¿Algo que quieras contarnos? (opcional)</label>
+  <textarea id="seqTxt" rows="3" placeholder="Por ejemplo: no encontraba dónde reservar…" style="width:100%;padding:12px 14px;border:1px solid var(--linea);border-radius:12px;font:15px Poppins,system-ui,sans-serif;resize:vertical"></textarea>
+  <div class="fila" style="margin-top:16px"><button class="btn" id="bSeq" disabled>Continuar</button><span class="estado" style="margin:0">Elige un número para continuar.</span></div>
 </div></div>
 
 <!-- Logrado -->
@@ -177,7 +192,14 @@ function verTarea(i){const tk=CFG.tareas[i];$('#tNum').textContent=`Tarea ${i+1}
 $('#bEmpezar').onclick=()=>{show('#cTarea',false);if(!cerrada)return;cerrada=false;if(actual>0)reiniciar();enviar({k:'tarea',id:CFG.tareas[actual].id,accion:'inicio'});
   $('#bT').innerHTML=`<b>Tarea ${actual+1}/${CFG.tareas.length}</b> · ${CFG.tareas[actual].escenario.replace(/[<>&]/g,'')}`;$('#barra').style.display='flex'};
 $('#bVer').onclick=()=>verTarea(actual);
+let ultimoRes=null,ultimoAuto=false,seqVal=null;
+$('#escala').innerHTML=[1,2,3,4,5,6,7].map(n=>`<button type="button" data-n="${n}" aria-label="${n} de 7">${n}</button>`).join('');
+$('#escala').addEventListener('click',e=>{const b=e.target.closest('button[data-n]');if(!b)return;seqVal=+b.dataset.n;document.querySelectorAll('#escala button').forEach(x=>x.classList.toggle('on',x===b));$('#bSeq').disabled=false;$('#bSeq').nextElementSibling.textContent=''});
+$('#bSeq').onclick=()=>{const tk=CFG.tareas[actual];enviar({k:'seq',id:tk.id,valor:seqVal,comentario:$('#seqTxt').value.trim()});show('#cSeq',false);$('#bSig').onclick()};
 function terminar(res,auto){if(cerrada)return;cerrada=true;const tk=CFG.tareas[actual];enviar({k:'tarea',id:tk.id,accion:'fin',resultado:res,auto:!!auto});$('#barra').style.display='none';
+  ultimoRes=res;ultimoAuto=auto;seqVal=null;$('#seqTxt').value='';$('#bSeq').disabled=true;$('#bSeq').nextElementSibling.textContent='Elige un número para continuar.';document.querySelectorAll('#escala button').forEach(x=>x.classList.remove('on'));
+  $('#seqH').textContent=(auto?'¡Lo lograste! · ':res==='No completada'?'Gracias, eso nos ayuda · ':'')+`Tarea ${actual+1} de ${CFG.tareas.length}`;$('#bSeq').textContent=actual>=CFG.tareas.length-1?'Terminar':'Siguiente tarea';show('#cSeq',true)}
+function mostrarOk(res,auto){
   const ult=actual>=CFG.tareas.length-1;
   $('#okT').textContent=auto?'¡Lo lograste!':res==='No completada'?'No te preocupes':'¡Gracias!';
   $('#okP').textContent=res==='No completada'?'Eso nos ayuda a encontrar lo que hay que mejorar.':(ult?'Era la última tarea.':'Pasemos a la siguiente.');
