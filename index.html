@@ -167,6 +167,7 @@ td[contenteditable]{background:#fffdf7}
     <button class="btn" id="bStart">Iniciar sesión</button>
     <button class="btn sec" id="bDemo">Probar en modo demostración</button>
     <span class="sp" style="flex:1"></span>
+    <button class="btn sec" id="bHistOpen">Sesiones guardadas (<span id="nHist">0</span>)</button>
     <button class="btn sec" id="bCombineOpen">Consolidar sesiones (matriz)</button>
   </div>
 </div></section>
@@ -207,7 +208,7 @@ td[contenteditable]{background:#fffdf7}
       <button class="btn sec" id="dlFicha">Ficha (.csv)</button>
       <button class="btn sec" id="dlMatriz">Matriz (.csv)</button>
       <button class="btn sec" id="cpIA">Copiar para IA</button>
-      <button class="btn sec" id="bNew">Nueva sesión</button>
+      <button class="btn sec" id="bNew">Nueva sesión</button> <button class="btn sec" id="bSumHist">Sesiones guardadas</button>
     </div>
   </div>
   <div class="card"><h3>Ficha de testeo por usuario</h3><p class="help">Puedes corregir cualquier celda antes de descargar.</p><table id="tFicha"></table></div>
@@ -216,6 +217,14 @@ td[contenteditable]{background:#fffdf7}
   <div class="card"><h3>Hallazgos propuestos</h3><div class="note">Propuestas automáticas a partir del registro (reglas, no IA). Revisa, borra o corrige. "Acción en Figma" la completa el equipo.</div><table id="tMatriz"></table></div>
 </div></section>
 
+<!-- SESIONES GUARDADAS -->
+<section class="view" id="vHist"><div class="sum">
+  <div class="card"><h2 style="font-size:22px">Sesiones guardadas</h2>
+    <p class="help">Cada sesión que terminas se guarda sola aquí, en este navegador (no se suben a internet). Para compartirlas con el equipo, descárgalas e impórtalas en el otro computador.</p>
+    <div class="row" style="margin-top:12px"><button class="btn sec" id="histBack">Volver</button><button class="btn" id="histComb">Consolidar todas</button><button class="btn sec" id="histDlAll">Descargar todas (.json)</button><label class="btn sec" style="cursor:pointer">Importar .json<input type="file" id="histImp" multiple accept=".json" hidden></label></div>
+  </div>
+  <div class="card"><table id="tHist"></table><p class="help" id="histVacio">Todavía no hay sesiones guardadas. Termina una sesión y aparecerá aquí.</p></div>
+</div></section>
 <!-- CONSOLIDAR -->
 <section class="view" id="vComb"><div class="sum">
   <div class="card"><h2 style="font-size:22px">Consolidar sesiones</h2>
@@ -298,7 +307,7 @@ function newSession(demo){
   S={version:1,demo:!!demo,inicio:Date.now(),dispositivo:dev,
      remoto:!demo&&modoActual()==='remota',participante:{alias:$('#pAlias').value.trim()||'P?',perfil:$('#pPerfil').value.trim(),tecnologia:$('#pTec').value,modalidad:(!demo&&modoActual()==='remota')?'Remota en vivo (link, sin moderación presencial)':$('#pMod').value,fecha:new Date().toLocaleString('es-CL')},
      tareas:readTasks().map(t=>({...t,inicio:null,fin:null,resultado:null})),
-     actual:null,pantalla:null,eventos:[],voz:[],marcas:[],calor:[],figma:false,respaldo:false};
+     actual:null,pantalla:null,eventos:[],voz:[],marcas:[],calor:[],figma:false,respaldo:false,id:'s'+Date.now()};
 }
 const now=()=>S?Date.now()-S.inicio:0;
 function ev(tipo,datos){const e={t:now(),tipo,tarea:S.actual,pantalla:S.pantalla,...datos};S.eventos.push(e);addLog(e);lastActivity=Date.now();return e}
@@ -456,6 +465,7 @@ function modoUI(){const r=modoActual()==='remota';$('#bStart').textContent=r?'Cr
 document.querySelectorAll('input[name=modo]').forEach(i=>i.onchange=modoUI);modoUI();
 $('#bDemo').onclick=()=>begin(true);
 $('#bEnd').onclick=()=>{if(!S)return;if(S.actual){const c=S.tareas.find(t=>t.id===S.actual);c.fin=now();c.resultado=c.resultado||'Sin cerrar'}S.fin=now();stopVoice();clearInterval(timer);clearInterval(demoTimer);if(S.remoto){enviar({k:'cerrar'});setTimeout(cerrarPeer,800)}
+  if(!S.demo)guardarSesion(S);
   $('#vSession').classList.remove('on');$('#vSum').classList.add('on');renderSummary()};
 $('#bNew').onclick=()=>{S=null;$('#vSum').classList.remove('on');$('#vSetup').classList.add('on');$('#clock').textContent='00:00';const a=$('#pAlias');const n=parseInt((a.value.match(/\d+/)||[0])[0])+1;a.value='P'+n;$('#pPerfil').value=''};
 
@@ -516,6 +526,8 @@ $('#bCombineOpen').onclick=()=>{$('#vSetup').classList.remove('on');$('#vComb').
 $('#combBack').onclick=()=>{$('#vComb').classList.remove('on');$('#vSetup').classList.add('on')};
 $('#combFiles').onchange=async e=>{
   const sess=[];for(const f of e.target.files){try{sess.push(JSON.parse(await f.text()))}catch(err){alert('No pude leer '+f.name)}}
+  consolidar(sess)};
+function consolidar(sess){
   if(!sess.length)return;const N=sess.length;
   const tasks={};for(const s of sess)for(const t of s.tareas){if(t.inicio==null)continue;const m=metricas(t,s);const o=tasks[t.id]=tasks[t.id]||{n:0,ok:0,dif:0,no:0,tiempos:[]};o.n++;if(t.resultado==='Completada')o.ok++;else if(t.resultado==='Completada con dificultad')o.dif++;else o.no++;if(m.dur!=null)o.tiempos.push(m.dur)}
   $('#tCombTasks').innerHTML='<tr><th>Tarea</th><th>Participantes</th><th>Completada</th><th>Con dificultad</th><th>No completada</th><th>Tiempo promedio</th></tr>'+Object.entries(tasks).map(([k,o])=>`<tr><td>${k}</td><td>${o.n}</td><td>${o.ok}</td><td>${o.dif}</td><td>${o.no}</td><td>${o.tiempos.length?fmt(o.tiempos.reduce((a,b)=>a+b,0)/o.tiempos.length):'—'}</td></tr>`).join('');
@@ -523,7 +535,31 @@ $('#combFiles').onchange=async e=>{
   const rank={Alta:3,Media:2,Baja:1};
   COMB=Object.values(groups).map(g=>{const n=g.quienes.length;const fr=n/N>=0.6?'Constante':n>1?'Ocasional':'Única';const sev=g.sevs.sort((a,b)=>rank[b]-rank[a])[0];return {problema:g.problema,severidad:sev,frecuencia:`${fr} (${n}/${N}: ${g.quienes.join(', ')})`,accion:'',evidencia:g.evid.join(' | '),score:rank[sev]*10+n}}).sort((a,b)=>b.score-a.score);
   renderMatriz('#tComb',COMB);$('#dlComb').disabled=false;
-  CALORC=sess.flatMap(s=>(s.calor||[]).map(p=>({...p,quien:s.participante.alias})));heatSelect('#cScr',CALORC,null);dibujarC()};
+  CALORC=sess.flatMap(s=>(s.calor||[]).map(p=>({...p,quien:s.participante.alias})));heatSelect('#cScr',CALORC,null);dibujarC()}
+
+/* ================= sesiones guardadas ================= */
+function leerSesiones(){try{return JSON.parse(localStorage.getItem('sala.sesiones')||'[]')}catch(e){return []}}
+function escribirSesiones(a){try{localStorage.setItem('sala.sesiones',JSON.stringify(a));return true}catch(e){alert('No se pudo guardar: el navegador no tiene espacio. Descarga las sesiones y borra algunas.');return false}}
+function guardarSesion(s){const a=leerSesiones().filter(x=>x.id!==s.id);a.unshift(JSON.parse(JSON.stringify(s)));escribirSesiones(a);contarHist()}
+function contarHist(){$('#nHist').textContent=leerSesiones().length}
+const DEVN={escritorio:'Escritorio',tablet:'Tablet',movil:'Celular',auto:'Automático'};
+function renderHist(){const a=leerSesiones();$('#histVacio').style.display=a.length?'none':'';
+  $('#tHist').innerHTML=a.length?'<tr><th>Fecha</th><th>Participante</th><th>Versión</th><th>Modalidad</th><th>Duración</th><th>Tareas</th><th>Clics</th><th></th></tr>'+a.map((s,i)=>{const ts=s.tareas.filter(t=>t.inicio!=null);const ic=t=>t.resultado==='Completada'?'✓':t.resultado==='Completada con dificultad'?'~':t.resultado?'✕':'·';
+    const dur=s.fin!=null?fmt(s.fin):'—';const clics=s.eventos.filter(e=>e.tipo==='clic').length;
+    return `<tr><td>${esc(s.participante.fecha||'')}</td><td><b>${esc(s.participante.alias)}</b>${s.participante.perfil?'<br><span class="help">'+esc(s.participante.perfil)+'</span>':''}</td><td>${DEVN[s.dispositivo]||esc(s.dispositivo||'')}</td><td>${esc((s.participante.modalidad||'').split(' (')[0])}</td><td>${dur}</td><td title="✓ completada · ~ con dificultad · ✕ no completada">${ts.map(t=>esc(t.id)+' '+ic(t)).join(' · ')||'—'}</td><td>${clics}</td>
+      <td style="white-space:nowrap"><button class="btn" data-a="ver" data-i="${i}" style="padding:6px 12px;font-size:12px">Ver</button> <button class="btn sec" data-a="dl" data-i="${i}" style="padding:6px 12px;font-size:12px">.json</button> <button class="btn sec" data-a="del" data-i="${i}" style="padding:6px 12px;font-size:12px">Borrar</button></td></tr>`}).join(''):'';}
+$('#tHist').addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;const a=leerSesiones();const s=a[+b.dataset.i];if(!s)return;
+  if(b.dataset.a==='ver'){S=s;$('#vHist').classList.remove('on');$('#vSum').classList.add('on');renderSummary();window.scrollTo(0,0)}
+  if(b.dataset.a==='dl')download(`sesion-${s.participante.alias}.json`,JSON.stringify(s,null,1),'application/json');
+  if(b.dataset.a==='del'&&confirm('¿Borrar la sesión de '+s.participante.alias+'? No se puede deshacer (descárgala antes si la necesitas).')){a.splice(+b.dataset.i,1);escribirSesiones(a);renderHist();contarHist()}});
+$('#bHistOpen').onclick=()=>{$('#vSetup').classList.remove('on');$('#vHist').classList.add('on');renderHist()};
+$('#histBack').onclick=()=>{$('#vHist').classList.remove('on');$('#vSetup').classList.add('on')};
+$('#histComb').onclick=()=>{const a=leerSesiones();if(!a.length)return;$('#vHist').classList.remove('on');$('#vComb').classList.add('on');consolidar(a)};
+$('#histDlAll').onclick=()=>{const a=leerSesiones();if(a.length)download('sesiones-sala-de-test.json',JSON.stringify(a,null,1),'application/json')};
+$('#histImp').onchange=async e=>{let a=leerSesiones();let n=0;for(const f of e.target.files){try{let d=JSON.parse(await f.text());if(!Array.isArray(d))d=[d];for(const s of d){if(!s||!s.tareas||!s.participante)continue;s.id=s.id||('s'+(s.inicioReloj||Date.now())+'-'+Math.random().toString(36).slice(2,6));a=a.filter(x=>x.id!==s.id);a.push(s);n++}}catch(err){alert('No pude leer '+f.name)}}
+  escribirSesiones(a);renderHist();contarHist();e.target.value='';if(n)alert(n+' sesión(es) importada(s).')};
+contarHist();
+$('#bSumHist').onclick=()=>{$('#vSum').classList.remove('on');$('#vHist').classList.add('on');renderHist()};
 $('#dlComb').onclick=()=>download('matriz-consolidada.csv',csv(tableRows('#tComb')),'text/csv;charset=utf-8');
 
 /* ================= alto de la barra (responsivo) ================= */
