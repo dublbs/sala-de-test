@@ -82,7 +82,8 @@ button{font:inherit;cursor:pointer}
 </div></div>
 
 <!-- Error -->
-<div class="capa off" id="cErr"><div class="tarjeta"><h2>Algo falta</h2><h1 id="errT">El link está incompleto</h1><p id="errP">Pídele a quien te lo envió un link nuevo.</p></div></div>
+<div class="capa off" id="cErr"><div class="tarjeta"><h2>Algo falta</h2><h1 id="errT">Falta el código de la sesión</h1><p id="errP">El link llegó cortado. Escribe el código que te dio quien modera (por ejemplo <b>eno-k3f9x2</b>) o pídele el link de nuevo.</p>
+  <div class="fila" id="codFila"><input id="cod" placeholder="eno-…" autocomplete="off" spellcheck="false" style="flex:1;min-width:160px;padding:12px 14px;border:1px solid var(--linea);border-radius:12px;font:15px ui-monospace,Menlo,monospace"><button class="btn" id="bCod">Entrar</button></div></div></div>
 
 <div id="escena"></div>
 <div class="barra" id="barra" style="display:none">
@@ -98,30 +99,38 @@ button{font:inherit;cursor:pointer}
 const $=s=>document.querySelector(s);
 const show=(id,on)=>$(id).classList.toggle('off',!on);
 function b64d(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return decodeURIComponent(escape(atob(s)))}
-let CFG=null;try{const m=location.hash.match(/c=([^&]+)/);CFG=JSON.parse(b64d(m[1]))}catch(e){}
+// El link trae solo el código de la sesión (#s=eno-xxxx). La configuración (prototipo, tareas) la envía la sala al conectar.
+// También acepta el formato antiguo con toda la configuración (#c=…).
+let CFG=null,SID=null;
+try{const m=location.hash.match(/c=([^&]+)/);if(m){CFG=JSON.parse(b64d(m[1]));SID=CFG.peer}}catch(e){}
+if(!SID){const m=(location.hash+'&'+location.search).match(/[#&?]s=([A-Za-z0-9_-]+)/);if(m)SID=m[1]}
 // versión del prototipo según la pantalla: menos de 768 px → móvil (390); 768 a 1279 → tablet (1024); 1280 o más → escritorio (1920)
-if(CFG&&(!CFG.dev||CFG.dev==='auto')){const w=window.innerWidth,tel=/iPhone|Android.+Mobile/i.test(navigator.userAgent);CFG.dev=(w<768||tel)?'movil':(w<1280?'tablet':'escritorio');const ini={movil:CFG.inicioM,tablet:CFG.inicioT,escritorio:CFG.inicioE}[CFG.dev];if(ini)CFG.inicio=ini}
-if(!CFG||!CFG.peer||!CFG.tareas){show('#cBien',false);show('#cErr',true)}
-else{const n=CFG.tareas.length;$('#nT').textContent=n===1?'una':n;$('#nT').nextSibling.textContent=n===1?' tarea corta. No hay respuestas correctas: estamos probando el diseño, no a ti.':' tareas cortas. No hay respuestas correctas: estamos probando el diseño, no a ti.'}
+function prepararCfg(){if(!CFG)return;if(!CFG.dev||CFG.dev==='auto'){const w=window.innerWidth,tel=/iPhone|Android.+Mobile/i.test(navigator.userAgent);CFG.dev=(w<768||tel)?'movil':(w<1280?'tablet':'escritorio');const ini={movil:CFG.inicioM,tablet:CFG.inicioT,escritorio:CFG.inicioE}[CFG.dev];if(ini)CFG.inicio=ini}
+  const n=CFG.tareas.length;$('#nT').textContent=n===1?'una':n;$('#nT').nextSibling.textContent=n===1?' tarea corta. No hay respuestas correctas: estamos probando el diseño, no a ti.':' tareas cortas. No hay respuestas correctas: estamos probando el diseño, no a ti.'}
+prepararCfg();
+if(!SID){show('#cBien',false);show('#cErr',true)}
+$('#bCod').onclick=()=>{const v=$('#cod').value.trim().replace(/^.*s=/,'');if(!/^[A-Za-z0-9_-]{4,}$/.test(v)){$('#cod').focus();return}location.hash='s='+v;location.reload()};
+$('#cod').addEventListener('keydown',e=>{if(e.key==='Enter')$('#bCod').click()});
 
 const esChrome=/Google Chrome|Microsoft Edge/.test(((navigator.userAgentData&&navigator.userAgentData.brands)||[]).map(b=>b.brand).join(' '))||(!navigator.userAgentData&&/Chrome\//.test(navigator.userAgent));
 const esMovil=/Android|iPhone|iPad/i.test(navigator.userAgent);
-if(CFG&&(!esChrome||esMovil))$('#estBien').textContent=esMovil?'Estás en un celular o tablet: podrás hacer las tareas, pero no compartir la pantalla.':'Te recomendamos usar Google Chrome para que todo funcione.';
+if(SID&&(!esChrome||esMovil))$('#estBien').textContent=esMovil?'Estás en un celular o tablet: podrás hacer las tareas, pero no compartir la pantalla.':'Te recomendamos usar Google Chrome para que todo funcione.';
 $('#acepto').onchange=e=>$('#bConectar').disabled=!e.target.checked;
 
 /* ---------- conexión ---------- */
-let peer=null,conn=null,stream=null,listo=false,cola=[];
+let peer=null,conn=null,stream=null,listo=false,cola=[],cfgRes=null;const cfgListo=new Promise(r=>{cfgRes=r;if(CFG)r()});
 function enviar(m){if(conn&&conn.open){try{conn.send(m)}catch(e){}}else cola.push(m)}
 function conectar(){return new Promise((res,rej)=>{
   peer=new Peer({debug:1});
   const to=setTimeout(()=>rej(new Error('tiempo')),15000);
-  peer.on('open',()=>{conn=peer.connect(CFG.peer,{reliable:true});
-    conn.on('open',()=>{clearTimeout(to);listo=true;enviar({k:'hola',dev:CFG.dev,nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')});while(cola.length)conn.send(cola.shift());res()});
+  peer.on('open',()=>{conn=peer.connect(SID,{reliable:true});
+    conn.on('open',()=>{clearTimeout(to);listo=true;enviar({k:'hola',dev:CFG?CFG.dev:null,nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')});while(cola.length)conn.send(cola.shift());res()});
     conn.on('data',onMod);conn.on('close',()=>{listo=false;toast('<b>Se perdió la conexión con quien modera.</b> Puedes seguir; intentaremos reconectar.');setTimeout(reconectar,3000)})});
   peer.on('error',e=>{if(e.type==='peer-unavailable'){clearTimeout(to);rej(new Error('nomod'))}else if(!listo){clearTimeout(to);rej(e)}});
 })}
-function reconectar(){if(listo||!peer||peer.destroyed)return;try{conn=peer.connect(CFG.peer,{reliable:true});conn.on('open',()=>{listo=true;while(cola.length)conn.send(cola.shift());if(stream)peer.call(CFG.peer,stream);toast('Conexión recuperada.')});conn.on('data',onMod);conn.on('close',()=>{listo=false;setTimeout(reconectar,4000)})}catch(e){setTimeout(reconectar,4000)}}
+function reconectar(){if(listo||!peer||peer.destroyed)return;try{conn=peer.connect(SID,{reliable:true});conn.on('open',()=>{listo=true;while(cola.length)conn.send(cola.shift());if(stream)peer.call(SID,stream);toast('Conexión recuperada.')});conn.on('data',onMod);conn.on('close',()=>{listo=false;setTimeout(reconectar,4000)})}catch(e){setTimeout(reconectar,4000)}}
 function onMod(m){if(!m)return;
+  if(m.k==='config'&&m.cfg){const primera=!CFG;CFG=m.cfg;prepararCfg();if(primera&&listo)enviar({k:'hola',dev:CFG.dev,nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')});cfgRes();return}
   if(m.k==='msg')toast('<b>Mensaje:</b> '+String(m.texto).replace(/[<>&]/g,''));
   if(m.k==='restart'){reiniciar();toast('El prototipo volvió al inicio.')}
   if(m.k==='ocupado'){$('#errT').textContent='Esta sesión ya está en uso';$('#errP').textContent='Pídele a quien te envió el link uno nuevo.';show('#cErr',true)}
@@ -178,11 +187,15 @@ $('#bRindo').onclick=()=>terminar('No completada',false);
 $('#bSig').onclick=()=>{show('#cOk',false);if(actual>=CFG.tareas.length-1){enviar({k:'fin'});show('#cFin',true);setTimeout(apagar,1500);return}actual++;verTarea(actual)};
 
 /* ---------- inicio ---------- */
+let conectando=null;
+async function asegurarConexion(){if(listo)return;if(!conectando)conectando=conectar().catch(e=>{conectando=null;try{peer&&peer.destroy()}catch(x){}throw e});return conectando}
+// conecta apenas abre la página para traer las tareas
+if(SID){const est=$('#estBien');const intentar=()=>asegurarConexion().then(()=>{if(est.dataset.err){est.textContent='';est.className='estado';delete est.dataset.err}}).catch(e=>{est.className='estado err';est.dataset.err=1;est.textContent=e.message==='nomod'?'Quien modera todavía no abre la sala. Puedes esperar aquí: reintentamos solos.':'Sin conexión con quien modera. Reintentando…';setTimeout(intentar,5000)});intentar()}
 $('#bConectar').onclick=async()=>{const b=$('#bConectar');b.disabled=true;const est=$('#estBien');est.className='estado';est.textContent='Elige "Esta pestaña" para compartirla y permite el micrófono…';
   const r=await compartir();
   est.textContent='Conectando con quien modera…';
-  try{await conectar()}catch(e){est.className='estado err';est.textContent=e.message==='nomod'?'Quien modera no está conectado. Pídele que abra la sala y vuelve a intentar.':'No se pudo conectar. Revisa tu internet y vuelve a intentar.';b.disabled=false;try{peer&&peer.destroy()}catch(x){}if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;return}
-  if(stream)peer.call(CFG.peer,stream);
+  try{await asegurarConexion();await Promise.race([cfgListo,new Promise((_,j)=>setTimeout(()=>j(new Error('cfg')),10000))])}catch(e){est.className='estado err';est.textContent=e.message==='nomod'?'Quien modera no está conectado. Pídele que abra la sala y vuelve a intentar.':e.message==='cfg'?'Conectado, pero la sala no envió las tareas. Pide a quien modera un link nuevo.':'No se pudo conectar. Revisa tu internet y vuelve a intentar.';b.disabled=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;return}
+  if(stream)peer.call(SID,stream);
   if(r.mic)voz();
   show('#cBien',false);montar();actual=0;verTarea(0)};
 </script>

@@ -550,7 +550,7 @@ $('#dlCalorC').onclick=()=>pngDe($('#cCanvas'),`calor-consolidado-${(nombrePanta
 let peer=null,conn=null,llamada=null;
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 function linkParticipante(){const cfg={v:1,peer:S.peerId,url:$('#cUrl').value.trim(),cid:$('#cCid').value.trim(),dev:S.dispositivo,inicioM:M.inicio.movil,inicioE:M.inicio.escritorio,inicioT:M.inicio.tablet,voz:$('#cVoz').value,inicio:M.inicio[S.dispositivo]||M.inicio.escritorio,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,exito:exitoIds(t)}))};
-  return new URL('participante.html',location.href).href+'#c='+b64e(JSON.stringify(cfg))}
+  S.cfgPart=cfg;return new URL('participante.html',location.href).href.split('#')[0].split('?')[0]+'#s='+S.peerId}
 function montarRemoto(st){st.innerHTML=`<div class="remote"><video id="rv" autoplay playsinline></video>
   <div class="wait" id="rwait"><b id="rwT">Preparando la conexión…</b><p id="rwP">Un momento.</p>
   <div class="linkbox" id="rwL" style="display:none"><input type="text" id="rlink" readonly><button class="btn light" id="bCopyLink">Copiar link</button></div>
@@ -562,14 +562,14 @@ function montarRemoto(st){st.innerHTML=`<div class="remote"><video id="rv" autop
 function rEstado(t){const e=$('#rEstado');if(e)e.textContent=t}
 function iniciarPeer(){
   if(!window.Peer){$('#rwT').textContent='No se pudo cargar la conexión';$('#rwP').textContent='Revisa tu internet y recarga la página.';return}
-  S.peerId='sala-eno-'+Math.random().toString(36).slice(2,10);
+  S.peerId='eno-'+Math.random().toString(36).slice(2,8);
   peer=new Peer(S.peerId,{debug:1});
-  peer.on('open',()=>{const l=linkParticipante();$('#rlink').value=l;$('#rlink2').value=l;$('#rwL').style.display='flex';$('#rwT').textContent='Esperando al participante';$('#rwP').textContent='Envíale este link (WhatsApp, correo, chat). Cuando lo abra, verás aquí su pantalla.';ev('sistema',{texto:'Link creado. Esperando al participante'})});
+  peer.on('open',()=>{const l=linkParticipante();$('#rlink').value=l;$('#rlink2').value=l;$('#rwL').style.display='flex';$('#rwT').textContent='Esperando al participante';$('#rwP').textContent='Envíale este link (WhatsApp, correo, chat). Si le llega cortado, que escriba el código '+S.peerId+'. Cuando lo abra, verás aquí su pantalla.';rEstado('Código '+S.peerId);ev('sistema',{texto:'Link creado. Esperando al participante'})});
   peer.on('error',e=>{ev('sistema',{texto:'Conexión: '+(e.type||e.message)});if(e.type==='network'||e.type==='server-error'||e.type==='socket-error'){$('#rwT').textContent='Se cortó la conexión con el servidor de enlace';$('#rwP').textContent='Revisa tu internet. Si persiste, crea un link nuevo.'}});
   peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}});
-  peer.on('connection',c=>{if(conn&&conn.open){c.on('open',()=>{c.send({k:'ocupado'});setTimeout(()=>c.close(),500)});return}
-    conn=c;c.on('open',()=>{dot('#dBak','on');rEstado('Participante conectado');$('#rwT').textContent='Participante conectado';$('#rwP').textContent='Esperando que comparta su pantalla…';ev('sistema',{texto:'Participante conectado'});enviar({k:'bienvenida',alias:S.participante.alias})});
-    c.on('data',onRemoto);c.on('close',()=>{dot('#dBak','off');rEstado('Participante desconectado');ev('sistema',{texto:'Participante desconectado'});conn=null})});
+  peer.on('connection',c=>{const viejo=conn;
+    conn=c;if(viejo&&viejo!==c){try{viejo.close()}catch(e){}ev('sistema',{texto:'El participante volvió a entrar (se reemplaza la conexión anterior)'})}c.on('open',()=>{dot('#dBak','on');rEstado('Participante conectado');$('#rwT').textContent='Participante conectado';$('#rwP').textContent='Esperando que comparta su pantalla…';ev('sistema',{texto:'Participante conectado'});if(!S.cfgPart)linkParticipante();enviar({k:'config',cfg:S.cfgPart});enviar({k:'bienvenida',alias:S.participante.alias})});
+    c.on('data',onRemoto);c.on('close',()=>{if(conn!==c)return;dot('#dBak','off');rEstado('Participante desconectado');ev('sistema',{texto:'Participante desconectado'});conn=null})});
   peer.on('call',c=>{llamada=c;c.answer();c.on('stream',st=>{const v=$('#rv');v.srcObject=st;v.muted=false;v.play().catch(()=>{v.muted=true;v.play();$('#bAudio').style.display=''});
     const tienePantalla=st.getVideoTracks().length>0;$('#rwait').style.display=tienePantalla?'none':'flex';if(!tienePantalla){$('#rwT').textContent='Conectado sin pantalla';$('#rwP').textContent='El participante no compartió su pantalla. Igual ves sus clics, el mapa de calor y escuchas su voz.'}
     ev('sistema',{texto:'Recibiendo '+[tienePantalla?'pantalla':null,st.getAudioTracks().length?'voz':null].filter(Boolean).join(' y ')})});
