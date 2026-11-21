@@ -1,4 +1,4 @@
-// Mapa del prototipo "enoturismo landing" (Figma JvIrZGRXpBwJmZrdSsB0Gf), exportado el 21 nov 2026.
+// Mapa del prototipo "enoturismo landing" (Figma JvIrZGRXpBwJmZrdSsB0Gf), exportado el 21 nov 2026 (v1: contacto, preguntas frecuentes y términos).
 // S: pantallas y ventanas (id → nombre). H: elementos con interacción (últimos segmentos del id → nombre legible).
 // Si cambian el prototipo, los nombres nuevos aparecen como "elemento <id>" hasta volver a exportar el mapa.
 window.MAPA = {
@@ -16,7 +16,17 @@ window.MAPA = {
     "685:5965":"Móvil · Ficha de la fiesta","685:5985":"Móvil · Te llevamos a Enoticket","685:6012":"Móvil · Elige un valle",
     "686:6004":"Móvil · Menú","686:6011":"Móvil · Filtrar","706:9549":"Móvil · Aviso · Reserva enviada",
     "706:9561":"Móvil · Aviso · Solicitud enviada","709:7304":"Móvil · Aviso · No incluido","709:9321":"Móvil · Reserva · procesando",
-    "709:9373":"Móvil · Aviso · Faltan datos"
+    "709:9373":"Móvil · Aviso · Faltan datos",
+    "724:7386":"Contacto",
+    "724:7505":"Preguntas frecuentes",
+    "724:7609":"Términos y condiciones",
+    "723:7373":"Aviso · Mensaje enviado",
+    "723:7382":"Aviso · Faltan datos (contacto)",
+    "725:7551":"Móvil · Contacto",
+    "725:7630":"Móvil · Preguntas frecuentes",
+    "725:7704":"Móvil · Términos y condiciones",
+    "723:7391":"Móvil · Aviso · Mensaje enviado",
+    "723:7400":"Móvil · Aviso · Faltan datos (contacto)"
   },
   // Reglas por último segmento (sirven en todas las pantallas donde se repite el componente)
   R: {
@@ -58,7 +68,8 @@ window.MAPA = {
     "685:5962":"Solicitud enviada › Volver","685:5979":"Fiesta › Reservar entrada","685:5980":"Fiesta › Ver en la agenda",
     "685:5997":"Enoticket › Volver al sitio","685:6126":"Elige un valle › Listo","I685:6016;669:2641":"Elige un valle › Siguiente",
     "686:6312":"Menú › Inicio","686:6315":"Menú › Valles","686:6318":"Menú › Vendimias","686:6321":"Menú › Experiencias",
-    "686:6324":"Menú › Packs","686:6327":"Menú › Para viñas","686:6330":"Menú › Ver agenda","686:6038":"Filtrar › Ver resultados"
+    "686:6324":"Menú › Packs","686:6327":"Menú › Para viñas","686:6330":"Menú › Ver agenda","686:6038":"Filtrar › Ver resultados",
+    "724:7449":"Contacto › Nombre","724:7454":"Contacto › Correo","724:7459":"Contacto › Temática de interés","724:7463":"Contacto › Región","724:7467":"Contacto › Motivo de contacto","724:7472":"Contacto › Enviar mensaje","724:7484":"Contacto › info@enoturismochile.cl","724:7489":"Contacto › Instagram","724:7491":"Contacto › Facebook","724:7493":"Contacto › LinkedIn","724:7495":"Contacto › X","724:7500":"Contacto › Súmate a la red","724:7569":"Preguntas frecuentes › Ir a contacto","724:7576":"Preguntas frecuentes › Súmate a la red","724:7579":"Pregunta › ¿Enoturismo Chile vende las experiencias?","724:7584":"Pregunta › ¿Quién confirma las fechas de una vendimia?","724:7589":"Pregunta › ¿La información de cada viña la revisan?","724:7594":"Pregunta › ¿Cómo sumo mi viña?","724:7599":"Pregunta › ¿Qué hacen con mis datos?","724:7604":"Pregunta › ¿Quién está detrás del sitio?","724:7713":"Términos › índice 1","724:7715":"Términos › índice 2","724:7717":"Términos › índice 3","724:7719":"Términos › índice 4","724:7721":"Términos › índice 5","724:7723":"Términos › índice 6","724:7725":"Términos › índice 7","724:7727":"Términos › índice 8","724:7729":"Términos › índice 9","724:7731":"Términos › índice 10","724:7733":"Términos › índice 11","724:7735":"Términos › índice 12","724:7711":"Términos › Documento completo","725:7587":"Contacto › Nombre","725:7592":"Contacto › Correo","725:7597":"Contacto › Temática de interés","725:7601":"Contacto › Región","725:7605":"Contacto › Motivo de contacto","725:7609":"Contacto › Enviar mensaje","725:7618":"Contacto › info@enoturismochile.cl","725:7622":"Contacto › Instagram","725:7624":"Contacto › Facebook","725:7626":"Contacto › LinkedIn","725:7628":"Contacto › X","725:7665":"Pregunta › ¿Enoturismo Chile vende las experiencias?","725:7670":"Pregunta › ¿Quién confirma las fechas de una vendimia?","725:7675":"Pregunta › ¿La información de cada viña la revisan?","725:7680":"Pregunta › ¿Cómo sumo mi viña?","725:7685":"Pregunta › ¿Qué hacen con mis datos?","725:7690":"Pregunta › ¿Quién está detrás del sitio?","725:7698":"Preguntas frecuentes › Ir a contacto","725:7702":"Preguntas frecuentes › Súmate a la red","725:7777":"Términos › Documento completo","724:7755":"Footer › Contacto","724:7756":"Footer › Instagram","724:7757":"Footer › Facebook","724:7758":"Footer › Preguntas frecuentes","724:7759":"Footer › Términos y condiciones","725:7579":"Footer › Contacto","725:7580":"Footer › Instagram","725:7581":"Footer › Facebook","725:7582":"Footer › Preguntas frecuentes","725:7583":"Footer › Términos y condiciones","725:7658":"Footer › Contacto","725:7659":"Footer › Instagram","725:7660":"Footer › Facebook","725:7661":"Footer › Preguntas frecuentes","725:7662":"Footer › Términos y condiciones","725:7732":"Footer › Contacto","725:7733":"Footer › Instagram","725:7734":"Footer › Facebook","725:7735":"Footer › Preguntas frecuentes","725:7736":"Footer › Términos y condiciones"
   },
   // Prefijos: componentes con muchos elementos parecidos
   P: [

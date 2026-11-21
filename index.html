@@ -180,6 +180,7 @@ function nombreElemento(id){
   const last2=segs.slice(-2).join(';');
   if(M.H[id])return M.H[id];if(M.H[last2])return M.H[last2];
   for(const [p,n] of (M.P||[]))if(String(id).startsWith(p))return n;
+  for(const sg of segs){const k=sg.replace(/^I/,'');if(M.H[k])return M.H[k]}
   const last=segs[segs.length-1];if(M.R[last])return M.R[last];
   if(segs.length>1&&M.R[segs[segs.length-2]])return M.R[segs[segs.length-2]];
   return 'elemento '+id;
@@ -254,7 +255,7 @@ function onFigma(type,d){
   if(type==='NEW_STATE'){ev('estado',{id:d.nodeId,elemento:nombreElemento(d.nodeId),temporizado:!!d.isTimedChange});return}
   if(type==='LOGIN_SCREEN_SHOWN'||type==='PASSWORD_SCREEN_SHOWN'){ev('sistema',{texto:'Figma pidió '+(type.startsWith('LOGIN')?'iniciar sesión':'contraseña')})}
 }
-function afterScreen(id){const n=nombrePantalla(id);if(/No incluido/.test(n))ev('sistema',{texto:'Intentó usar algo fuera del prototipo',clave:'fuera'});if(/Faltan datos/.test(n))ev('sistema',{texto:'Intentó enviar el formulario incompleto',clave:'faltan'})}
+function afterScreen(id){const n=nombrePantalla(id);if(/No incluido/.test(n))ev('sistema',{texto:'Intentó usar algo fuera del prototipo',clave:'fuera'});if(/Faltan datos/.test(n)){const c=/contacto/.test(n);ev('sistema',{texto:'Intentó enviar el formulario '+(c?'de contacto':'de viñas')+' incompleto',clave:c?'faltan-contacto':'faltan'})}}
 function onRespaldo(d){
   if(!S)return;if(!S.respaldo){S.respaldo=true;dot('#dBak','on')}
   if(d.type==='hola')return;
@@ -373,6 +374,7 @@ function hallazgos(ses){
   }
   for(const e of ses.eventos.filter(e=>e.clave==='fuera')){const prev=[...ses.eventos].reverse().find(x=>x.t<=e.t&&x.tipo==='clic');add('fuera-'+(prev?prev.elemento:''),`Intentó usar algo que no está en el prototipo${prev?' ('+prev.elemento+')':''}: espera esa función`,'Baja',fmt(e.t),e.tarea)}
   for(const e of ses.eventos.filter(e=>e.clave==='faltan'))add('faltan','Intentó enviar el formulario de viñas sin completar los campos','Media',fmt(e.t),e.tarea);
+  for(const e of ses.eventos.filter(e=>e.clave==='faltan-contacto'))add('faltan-contacto','Intentó enviar el formulario de contacto sin nombre o correo','Media',fmt(e.t),e.tarea);
   for(const m of ses.marcas)add('marca-'+m.t,`Fricción marcada en ${nombrePantalla(m.pantalla)}${m.nota?': '+m.nota:''}`,'Media',`${fmt(m.t)} · “${m.voz||'sin voz'}”`,m.tarea);
   const seen=new Set();return out.filter(h=>{if(seen.has(h.clave))return false;seen.add(h.clave);return true});
 }
