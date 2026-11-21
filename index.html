@@ -134,7 +134,7 @@ td[contenteditable]{background:#fffdf7}
   <div class="card grid2">
     <div><label>Link del prototipo (Figma)</label><input type="text" id="cUrl" value="https://www.figma.com/proto/JvIrZGRXpBwJmZrdSsB0Gf/enoturismo-landing"><p class="help">Desde Figma: Compartir prototipo → Copiar link.</p></div>
     <div><label>Client ID (app de Figma)</label><p class="help">Está siempre arriba, en la barra morada: puedes editarlo y copiarlo en cualquier momento. Se guarda solo en este navegador. Sin él, Figma no envía los avisos (usa el modo demostración para probar).</p></div>
-    <div><label>Dispositivo</label><select id="cDev"><option value="auto" selected>Automático: según la pantalla</option><option value="escritorio">Escritorio (1920)</option><option value="movil">Móvil (390)</option></select></div>
+    <div><label>Dispositivo</label><select id="cDev"><option value="auto" selected>Automático: según la pantalla</option><option value="escritorio">Escritorio (1920)</option><option value="tablet">Tablet (1024)</option><option value="movil">Móvil (390)</option></select></div>
     <div><label>Transcripción de voz</label><select id="cVoz"><option value="es-CL">Activada · español (Chile)</option><option value="es-ES">Activada · español (España)</option><option value="">Desactivada</option></select><p class="help">Usa el reconocimiento de voz de Chrome (servidores de Google). No se guarda audio, solo texto. Inclúyelo en el consentimiento.</p><button type="button" class="btn sec" id="bMicTest" style="margin-top:8px">Probar micrófono y transcripción</button><div class="micst" id="micSt"></div></div>
   </div>
   <div class="card">
@@ -251,8 +251,9 @@ const TAREAS_DEF=[
 const EXITO_DEF={T1:'639:5295',T2:'651:3028',T3:'639:5295'};
 const EQUIV={'639:5295':'685:5850','651:3028':'685:5965','639:5315':'685:5884','639:5332':'685:5906','639:5355':'685:5929','639:5379':'685:5953','684:8199':'685:5985','680:5000':'685:5846','680:5213':'685:5847','680:5604':'685:5848','680:5721':'685:5849','724:7386':'725:7551','724:7505':'725:7630','724:7609':'725:7704','723:7373':'723:7391','723:7382':'723:7400','709:9284':'709:9321','706:9525':'706:9549','706:9537':'706:9561','709:9361':'709:9373','329:16266':'685:5845'};
 Object.entries({...EQUIV}).forEach(([a,b])=>EQUIV[b]=EQUIV[b]||a);
-const exitoIds=t=>t.exito?[t.exito,EQUIV[t.exito]].filter(Boolean):[];
-const opcionesExito=sel=>'<option value="">— sin pantalla de éxito —</option>'+Object.entries(M.S).filter(([id,n])=>!/^Móvil/.test(n)).map(([id,n])=>`<option value="${id}"${id===sel?' selected':''}>${esc(n)}</option>`).join('');
+const M2T={"685:5845":"734:9133","685:5846":"734:9364","685:5847":"734:9522","685:5848":"734:9820","685:5849":"734:9901","725:7551":"734:9943","725:7630":"734:10005","725:7704":"734:10068","685:5850":"734:10133","709:9321":"734:10149","685:5985":"734:10165","685:5884":"734:10178","685:5906":"734:10190","685:5929":"734:10211","685:5953":"734:10224","685:5965":"734:10234","685:6012":"734:10250","686:6004":"734:10257","686:6011":"734:10277","706:9549":"734:10286","706:9561":"734:10295","709:9373":"734:10304","723:7391":"734:10313","723:7400":"734:10322"};
+const exitoIds=t=>{if(!t.exito)return [];const m=EQUIV[t.exito];return [t.exito,m,m&&M2T[m],M2T[t.exito]].filter(Boolean)};
+const opcionesExito=sel=>'<option value="">— sin pantalla de éxito —</option>'+Object.entries(M.S).filter(([id,n])=>!/^(Móvil|Tablet)/.test(n)).map(([id,n])=>`<option value="${id}"${id===sel?' selected':''}>${esc(n)}</option>`).join('');
 function renderTaskEditor(){const saved=JSON.parse(store.get('sala.tareas')||'null')||TAREAS_DEF;$('#taskEd').innerHTML=saved.map((t,i)=>`<div class="t"><input type="text" value="${esc(t.id)}" data-i="${i}" data-k="id"><textarea data-i="${i}" data-k="escenario">${esc(t.escenario)}</textarea><textarea data-i="${i}" data-k="criterio">${esc(t.criterio)}</textarea><select data-i="${i}" data-k="exito" title="Pantalla de éxito">${opcionesExito(t.exito!==undefined?t.exito:(EXITO_DEF[t.id]||''))}</select></div>`).join('')}
 function readTasks(){const arr=[];document.querySelectorAll('#taskEd .t').forEach(row=>{const o={};row.querySelectorAll('[data-k]').forEach(el=>o[el.dataset.k]=el.value.trim());if(o.id&&o.escenario)arr.push(o)});store.set('sala.tareas',JSON.stringify(arr));return arr}
 renderTaskEditor();
@@ -269,10 +270,11 @@ $('#bApplyCid').onclick=()=>{if(!S||S.demo)return;S.figma=false;mountStage();ev(
 if(store.get('sala.url'))$('#cUrl').value=store.get('sala.url');
 
 /* ================= estado ================= */
+function devAuto(){const w=window.innerWidth;const tel=/iPhone|Android.+Mobile/i.test(navigator.userAgent);return (w<768||tel)?'movil':(w<1280?'tablet':'escritorio')}
 function modoActual(){const i=document.querySelector('input[name=modo]:checked');return i?i.value:'presencial'}
 let S=null;let timer=null;let demoTimer=null;let lastClick=null;let lastActivity=0;let rec=null;let wantVoice=false;
 function newSession(demo){
-  let dev=$('#cDev').value;if(dev==='auto'&&!(!demo&&modoActual()==='remota'))dev=(window.innerWidth<768||/Android|iPhone|iPad/i.test(navigator.userAgent))?'movil':'escritorio';
+  let dev=$('#cDev').value;if(dev==='auto'&&!(!demo&&modoActual()==='remota'))dev=devAuto();
   S={version:1,demo:!!demo,inicio:Date.now(),dispositivo:dev,
      remoto:!demo&&modoActual()==='remota',participante:{alias:$('#pAlias').value.trim()||'P?',perfil:$('#pPerfil').value.trim(),tecnologia:$('#pTec').value,modalidad:(!demo&&modoActual()==='remota')?'Remota en vivo (link, sin moderación presencial)':$('#pMod').value,fecha:new Date().toLocaleString('es-CL')},
      tareas:readTasks().map(t=>({...t,inicio:null,fin:null,resultado:null})),
@@ -297,7 +299,7 @@ function embedUrl(){
   const raw=$('#cUrl').value.trim();const cid=$('#cCid').value.trim();
   let u;try{u=new URL(raw)}catch(e){return null}
   const m=u.pathname.match(/\/proto\/([^/]+)\/?([^/]*)/);if(!m)return null;
-  const start=(S.dispositivo==='movil'?M.inicio.movil:M.inicio.escritorio)||u.searchParams.get('starting-point-node-id')||u.searchParams.get('node-id');
+  const start=(M.inicio[S.dispositivo]||M.inicio.escritorio)||u.searchParams.get('starting-point-node-id')||u.searchParams.get('node-id');
   const nid=String(start).replace(':','-');
   const q=new URLSearchParams({'node-id':nid,'starting-point-node-id':String(start).replace('-',':'),'embed-host':'sala-de-test','client-id':cid,'scaling':S.dispositivo==='movil'?'scale-down':'scale-down-width','content-scaling':'fixed','hide-ui':'1'});
   return `https://embed.figma.com/proto/${m[1]}/${m[2]||'prototipo'}?${q}`;
@@ -320,11 +322,13 @@ function onFigma(type,d){
   if(type==='MOUSE_PRESS_OR_RELEASE'){
     const k=(d.targetNodeId||'')+'|'+d.handled;const t=Date.now();if(k===lastMouse.k&&t-lastMouse.t<500)return;lastMouse={k,t};
     if(d.presentedNodeId&&d.presentedNodeId!==S.pantalla){S.pantalla=d.presentedNodeId;updateNow()}
-    ev('clic',{fuente:'figma',respuesta:!!d.handled,id:d.targetNodeId||null,elemento:d.handled?nombreElemento(d.targetNodeId):('cerca de '+nombreElemento(d.targetNodeId)),pos:d.targetNodeMousePosition||null});
+    let el=nombreElemento(d.targetNodeId);if(/^elemento |^zona sin/.test(el)){const z=zonaDe(d);if(z)el=z}
+    ev('clic',{fuente:'figma',respuesta:!!d.handled,id:d.targetNodeId||null,elemento:d.handled?el:('cerca de '+el),pos:d.targetNodeMousePosition||null});
     if(window.Calor)S.calor.push(Calor.desde(d,{t:now(),tarea:S.actual,s:d.presentedNodeId||S.pantalla}));renderTasks();renderHeat();return}
   if(type==='NEW_STATE'){ev('estado',{id:d.nodeId,elemento:nombreElemento(d.nodeId),temporizado:!!d.isTimedChange});return}
   if(type==='LOGIN_SCREEN_SHOWN'||type==='PASSWORD_SCREEN_SHOWN'){ev('sistema',{texto:'Figma pidió '+(type.startsWith('LOGIN')?'iniciar sesión':'contraseña')})}
 }
+function zonaDe(d){if(!window.Calor||!window.PANTALLAS)return null;const s=d.presentedNodeId||(S&&S.pantalla);const P=PANTALLAS[s];if(!P)return null;const q=Calor.pos(Calor.desde(d,{s}),true);if(!q)return null;let best=null;for(const [x,y,w,h,n] of P.k)if(q.x>=x&&q.x<=x+w&&q.y>=y&&q.y<=y+h){if(!best||w*h<best.a)best={n,a:w*h}}return best?nombrePantalla(s).replace(/^(Móvil|Tablet) · /,'')+' › '+best.n:null}
 function afterScreen(id){const n=nombrePantalla(id);if(/No incluido/.test(n))ev('sistema',{texto:'Intentó usar algo fuera del prototipo',clave:'fuera'});if(/Faltan datos/.test(n)){const c=/contacto/.test(n);ev('sistema',{texto:'Intentó enviar el formulario '+(c?'de contacto':'de viñas')+' incompleto',clave:c?'faltan-contacto':'faltan'})}}
 function onRespaldo(d){
   if(!S)return;if(!S.respaldo){S.respaldo=true;dot('#dBak','on')}
@@ -531,7 +535,7 @@ $('#dlCalorC').onclick=()=>pngDe($('#cCanvas'),`calor-consolidado-${(nombrePanta
 /* ================= modalidad remota (link) ================= */
 let peer=null,conn=null,llamada=null;
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-function linkParticipante(){const cfg={v:1,peer:S.peerId,url:$('#cUrl').value.trim(),cid:$('#cCid').value.trim(),dev:S.dispositivo,inicioM:M.inicio.movil,inicioE:M.inicio.escritorio,voz:$('#cVoz').value,inicio:S.dispositivo==='movil'?M.inicio.movil:M.inicio.escritorio,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,exito:exitoIds(t)}))};
+function linkParticipante(){const cfg={v:1,peer:S.peerId,url:$('#cUrl').value.trim(),cid:$('#cCid').value.trim(),dev:S.dispositivo,inicioM:M.inicio.movil,inicioE:M.inicio.escritorio,inicioT:M.inicio.tablet,voz:$('#cVoz').value,inicio:M.inicio[S.dispositivo]||M.inicio.escritorio,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,exito:exitoIds(t)}))};
   return new URL('participante.html',location.href).href+'#c='+b64e(JSON.stringify(cfg))}
 function montarRemoto(st){st.innerHTML=`<div class="remote"><video id="rv" autoplay playsinline></video>
   <div class="wait" id="rwait"><b id="rwT">Preparando la conexión…</b><p id="rwP">Un momento.</p>
@@ -560,7 +564,7 @@ function iniciarPeer(){
 function cerrarPeer(){try{llamada&&llamada.close()}catch(e){}try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}peer=conn=llamada=null}
 function enviar(m){if(conn&&conn.open)try{conn.send(m)}catch(e){}}
 function onRemoto(m){if(!S||!m||typeof m!=='object')return;
-  if(m.k==='hola'){if(m.dev){S.dispositivo=m.dev}ev('sistema',{texto:'Navegador del participante: '+(m.nav||'?')+(m.dev?' · ve la versión '+(m.dev==='movil'?'móvil (390)':'escritorio (1920)'):'')});return}
+  if(m.k==='hola'){if(m.dev){S.dispositivo=m.dev}ev('sistema',{texto:'Navegador del participante: '+(m.nav||'?')+(m.dev?' · ve la versión '+({movil:'móvil (390)',tablet:'tablet (1024)',escritorio:'escritorio (1920)'}[m.dev]||m.dev):'')});return}
   if(m.k==='figma'){onFigma(m.type,m.data||{});return}
   if(m.k==='voz'){if(m.texto){S.voz.push({t:now(),texto:m.texto,tarea:S.actual,pantalla:S.pantalla});ev('voz',{texto:m.texto})}return}
   if(m.k==='interim'){$('#interim').textContent=m.texto||'';return}

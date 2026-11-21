@@ -3,7 +3,7 @@
 // Si cambian el prototipo, los nombres nuevos aparecen como "elemento <id>" hasta volver a exportar el mapa.
 window.MAPA = {
   archivo: "JvIrZGRXpBwJmZrdSsB0Gf",
-  inicio: { escritorio: "329:16266", movil: "685:5845" },
+  inicio: { escritorio: "329:16266", movil: "685:5845", tablet: "734:9133" },
   S: {
     "329:16266":"Landing","639:5295":"Reserva","639:5315":"Detalle del pack","639:5332":"Vendimias por zona",
     "639:5355":"Súmate a la red","639:5379":"Solicitud enviada","651:3028":"Ficha de la fiesta",
@@ -26,7 +26,8 @@ window.MAPA = {
     "725:7630":"Móvil · Preguntas frecuentes",
     "725:7704":"Móvil · Términos y condiciones",
     "723:7391":"Móvil · Aviso · Mensaje enviado",
-    "723:7400":"Móvil · Aviso · Faltan datos (contacto)"
+    "723:7400":"Móvil · Aviso · Faltan datos (contacto)",
+    "734:9133":"Tablet · Landing","734:9364":"Tablet · Explorar · Experiencias","734:9522":"Tablet · Explorar · Agenda","734:9820":"Tablet · Explorar · Packs","734:9901":"Tablet · Valle","734:9943":"Tablet · Contacto","734:10005":"Tablet · Preguntas frecuentes","734:10068":"Tablet · Términos y condiciones","734:10133":"Tablet · Reserva","734:10149":"Tablet · Reserva · procesando","734:10165":"Tablet · Te llevamos a Enoticket","734:10178":"Tablet · Detalle del pack","734:10190":"Tablet · Vendimias por zona","734:10211":"Tablet · Súmate a la red","734:10224":"Tablet · Solicitud enviada","734:10234":"Tablet · Ficha de la fiesta","734:10250":"Tablet · Elige un valle","734:10257":"Tablet · Menú","734:10277":"Tablet · Filtrar","734:10286":"Tablet · Aviso · Reserva enviada","734:10295":"Tablet · Aviso · Solicitud enviada","734:10304":"Tablet · Aviso · Faltan datos","734:10313":"Tablet · Aviso · Mensaje enviado","734:10322":"Tablet · Aviso · Faltan datos (contacto)"
   },
   // Reglas por último segmento (sirven en todas las pantallas donde se repite el componente)
   R: {

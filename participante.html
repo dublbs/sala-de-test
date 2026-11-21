@@ -99,14 +99,14 @@ const $=s=>document.querySelector(s);
 const show=(id,on)=>$(id).classList.toggle('off',!on);
 function b64d(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return decodeURIComponent(escape(atob(s)))}
 let CFG=null;try{const m=location.hash.match(/c=([^&]+)/);CFG=JSON.parse(b64d(m[1]))}catch(e){}
-// versión del prototipo según la pantalla: celular o ventana angosta → móvil (390); si no → escritorio (1920)
-if(CFG&&(!CFG.dev||CFG.dev==='auto')){CFG.dev=(window.innerWidth<768||/Android|iPhone|iPad/i.test(navigator.userAgent))?'movil':'escritorio';if(CFG.inicioM&&CFG.inicioE)CFG.inicio=CFG.dev==='movil'?CFG.inicioM:CFG.inicioE}
+// versión del prototipo según la pantalla: menos de 768 px → móvil (390); 768 a 1279 → tablet (1024); 1280 o más → escritorio (1920)
+if(CFG&&(!CFG.dev||CFG.dev==='auto')){const w=window.innerWidth,tel=/iPhone|Android.+Mobile/i.test(navigator.userAgent);CFG.dev=(w<768||tel)?'movil':(w<1280?'tablet':'escritorio');const ini={movil:CFG.inicioM,tablet:CFG.inicioT,escritorio:CFG.inicioE}[CFG.dev];if(ini)CFG.inicio=ini}
 if(!CFG||!CFG.peer||!CFG.tareas){show('#cBien',false);show('#cErr',true)}
 else{const n=CFG.tareas.length;$('#nT').textContent=n===1?'una':n;$('#nT').nextSibling.textContent=n===1?' tarea corta. No hay respuestas correctas: estamos probando el diseño, no a ti.':' tareas cortas. No hay respuestas correctas: estamos probando el diseño, no a ti.'}
 
 const esChrome=/Google Chrome|Microsoft Edge/.test(((navigator.userAgentData&&navigator.userAgentData.brands)||[]).map(b=>b.brand).join(' '))||(!navigator.userAgentData&&/Chrome\//.test(navigator.userAgent));
 const esMovil=/Android|iPhone|iPad/i.test(navigator.userAgent);
-if(CFG&&(!esChrome||esMovil))$('#estBien').textContent=esMovil?'Estás en un celular: podrás hacer las tareas, pero no compartir la pantalla.':'Te recomendamos usar Google Chrome para que todo funcione.';
+if(CFG&&(!esChrome||esMovil))$('#estBien').textContent=esMovil?'Estás en un celular o tablet: podrás hacer las tareas, pero no compartir la pantalla.':'Te recomendamos usar Google Chrome para que todo funcione.';
 $('#acepto').onchange=e=>$('#bConectar').disabled=!e.target.checked;
 
 /* ---------- conexión ---------- */
