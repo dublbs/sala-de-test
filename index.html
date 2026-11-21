@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sala de test · Enoturismo Chile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--marca:#3d376a;--profundo:#1f1b6f;--claro:#e4e1f0;--lila:#665e7c;--papel:#faf7f2;--linea:#e6dfd6;--texto:#2b2a33;--suave:#66625e;--ok:#2f6b2a;--warn:#9a6a00;--err:#8a2a3c;--blanco:#fff;--r:16px}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:var(--papel);color:var(--texto);font-size:14px}
+button{font:inherit;cursor:pointer}input,select,textarea{font:inherit}
+h1,h2,h3{margin:0;color:var(--marca)}
+.top{display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--marca);color:#fff}
+.top h1{color:#fff;font-size:16px;font-weight:600}
+.top .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.14);font-size:12px}
+.dot{width:8px;height:8px;border-radius:50%;background:#bbb}.dot.on{background:#7be07b}.dot.off{background:#ff8a8a}.dot.wait{background:#ffd25e}
+.btn{border:0;border-radius:999px;padding:10px 18px;background:var(--marca);color:#fff;font-weight:500}
+.btn.sec{background:transparent;color:var(--marca);box-shadow:inset 0 0 0 1.5px var(--marca)}
+.btn.light{background:#fff;color:var(--marca)}
+.btn.ok{background:var(--ok)}.btn.warn{background:var(--warn)}.btn.err{background:var(--err)}
+.btn:disabled{opacity:.4;cursor:default}
+.view{display:none}.view.on{display:block}
+/* setup */
+.setup{max-width:1040px;margin:32px auto;padding:0 20px 64px}
+.card{background:#fff;border:1px solid var(--linea);border-radius:var(--r);padding:24px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+label{display:block;font-size:12px;font-weight:500;color:var(--suave);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+input[type=text],select,textarea{width:100%;border:1px solid var(--linea);border-radius:10px;padding:10px 12px;background:#fff;color:var(--texto)}
+textarea{min-height:64px;resize:vertical}
+.help{font-size:12px;color:var(--suave);margin-top:6px;line-height:1.5}
+.tasks .t{display:grid;grid-template-columns:56px 1fr 1fr;gap:8px;margin-bottom:8px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+/* session */
+.session{display:none;height:calc(100vh - 52px);grid-template-columns:1fr 420px}
+.session.on{display:grid}
+.stage{position:relative;background:#121019;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.stage iframe{border:0;width:100%;height:100%;background:#121019}
+.stage.movil iframe{width:430px;height:min(932px,100%);border-radius:24px}
+.demo-screen{color:#fff;text-align:center;max-width:520px;padding:24px;line-height:1.6}
+.demo-screen b{font-size:28px;display:block;margin-bottom:8px}
+.panel{display:flex;flex-direction:column;border-left:1px solid var(--linea);background:#fff;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--linea)}
+.tabs button{flex:1;background:none;border:0;padding:12px;color:var(--suave);border-bottom:3px solid transparent}
+.tabs button.on{color:var(--marca);font-weight:600;border-bottom-color:var(--marca)}
+.pane{display:none;padding:16px;overflow:auto;flex:1;min-height:0}.pane.on{display:block}
+.task{border:1px solid var(--linea);border-radius:14px;padding:14px;margin-bottom:10px}
+.task.cur{border-color:var(--marca);box-shadow:0 0 0 2px var(--claro)}
+.task h3{font-size:14px}.task p{margin:6px 0;color:var(--suave);font-size:13px;line-height:1.5}
+.task .res{font-size:12px;font-weight:600}
+.task .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.task .acts .btn{padding:7px 12px;font-size:12px}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.metric{background:var(--papel);border-radius:10px;padding:8px}
+.metric b{display:block;font-size:16px;color:var(--marca)}.metric span{font-size:11px;color:var(--suave)}
+.now{background:var(--claro);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:13px}
+.mark{display:flex;gap:8px;margin:12px 0}
+.mark input{flex:1}
+.log{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.log div{padding:4px 0;border-bottom:1px dashed var(--linea);display:grid;grid-template-columns:56px 1fr;gap:8px}
+.log .t{color:var(--suave)}.log .miss{color:var(--err);font-weight:600}.log .scr{color:var(--marca);font-weight:600}.log .voz{color:#205c7a}.log .mod{color:var(--warn);font-weight:600}
+.interim{color:var(--suave);font-style:italic;min-height:20px;margin:8px 0}
+.footer{border-top:1px solid var(--linea);padding:12px 16px;display:flex;gap:8px;justify-content:space-between}
+/* summary */
+.sum{max-width:1100px;margin:32px auto;padding:0 20px 64px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border:1px solid var(--linea);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--marca);color:#fff;font-weight:500}
+td[contenteditable]{background:#fffdf7}
+.sev-Alta{color:var(--err);font-weight:600}.sev-Media{color:var(--warn);font-weight:600}.sev-Baja{color:var(--suave);font-weight:600}
+.note{background:var(--claro);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13px;line-height:1.5}
+.warnbox{background:#fff4d6;border:1px solid #f0d27a;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px;display:none}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}.session.on{grid-template-columns:1fr;grid-template-rows:60vh 1fr}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Sala de test · Enoturismo Chile</h1>
+  <span class="pill"><span class="dot" id="dFig"></span>Figma</span>
+  <span class="pill"><span class="dot" id="dBak"></span>Respaldo</span>
+  <span class="pill"><span class="dot" id="dVoz"></span>Voz</span>
+  <span class="sp"></span>
+  <span class="pill" id="clock">00:00</span>
+</div>
+
+<!-- CONFIGURACIÓN -->
+<section class="view on" id="vSetup"><div class="setup">
+  <div class="card">
+    <h2 style="font-size:22px;margin-bottom:6px">Preparar la sesión</h2>
+    <p class="help">Registra lo que pasa en el prototipo (pantallas, clics, clics sin respuesta, cambios de estado), transcribe la voz en vivo y arma la ficha por usuario y la matriz de hallazgos. No graba video: una sesión pesa unos pocos KB.</p>
+  </div>
+  <div class="card grid2">
+    <div><label>Link del prototipo (Figma)</label><input type="text" id="cUrl" value="https://www.figma.com/proto/JvIrZGRXpBwJmZrdSsB0Gf/enoturismo-landing"><p class="help">Desde Figma: Compartir prototipo → Copiar link.</p></div>
+    <div><label>Client ID (app de Figma)</label><input type="text" id="cCid" placeholder="ej. 6rtt685EC…"><p class="help">Se guarda solo en este navegador. Sin él, Figma no envía los avisos (usa el modo demostración para probar).</p></div>
+    <div><label>Dispositivo</label><select id="cDev"><option value="escritorio">Escritorio (1920)</option><option value="movil">Móvil (390)</option></select></div>
+    <div><label>Transcripción de voz</label><select id="cVoz"><option value="es-CL">Activada · español (Chile)</option><option value="es-ES">Activada · español (España)</option><option value="">Desactivada</option></select><p class="help">Usa el reconocimiento de voz de Chrome (servidores de Google). No se guarda audio, solo texto. Inclúyelo en el consentimiento.</p></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:12px">Participante</h3>
+    <div class="grid2">
+      <div><label>Nombre o alias</label><input type="text" id="pAlias" value="P1"></div>
+      <div><label>Fecha y modalidad</label><select id="pMod"><option>Presencial</option><option>Remota (llamada compartiendo pantalla)</option></select></div>
+      <div><label>Perfil: edad y ocupación</label><input type="text" id="pPerfil" placeholder="ej. 34 años, profesora"></div>
+      <div><label>Familiaridad tecnológica</label><select id="pTec"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>
+    </div>
+  </div>
+  <div class="card tasks">
+    <h3 style="margin-bottom:12px">Tareas (2 a 3 escenarios)</h3>
+    <div id="taskEd"></div>
+    <p class="help">Lee el escenario en voz alta al iniciar cada tarea. El criterio de éxito es para quien modera.</p>
+  </div>
+  <div class="row">
+    <button class="btn" id="bStart">Iniciar sesión</button>
+    <button class="btn sec" id="bDemo">Probar en modo demostración</button>
+    <span class="sp" style="flex:1"></span>
+    <button class="btn sec" id="bCombineOpen">Consolidar sesiones (matriz)</button>
+  </div>
+</div></section>
+
+<!-- SESIÓN -->
+<section class="session" id="vSession">
+  <div class="stage" id="stage"></div>
+  <aside class="panel">
+    <div class="tabs"><button class="on" data-p="pTask">Tareas</button><button data-p="pLog">Registro</button><button data-p="pVoz">Voz</button></div>
+    <div class="pane on" id="pTask">
+      <div class="warnbox" id="warnFig"></div>
+      <div class="now" id="now">Pantalla actual: —</div>
+      <div id="taskList"></div>
+      <div class="mark"><input type="text" id="markTxt" placeholder="Nota rápida (opcional)"><button class="btn warn" id="bMark">Marcar fricción</button></div>
+      <p class="help">"Marcar fricción" guarda el momento, la pantalla y lo que la persona dijo en los últimos 15 segundos.</p>
+    </div>
+    <div class="pane" id="pLog"><div class="log" id="log"></div></div>
+    <div class="pane" id="pVoz"><div class="interim" id="interim"></div><div class="log" id="vozLog"></div></div>
+    <div class="footer"><button class="btn sec" id="bRestart">Reiniciar prototipo</button><button class="btn" id="bEnd">Terminar sesión</button></div>
+  </aside>
+</section>
+
+<!-- RESUMEN -->
+<section class="view" id="vSum"><div class="sum">
+  <div class="card"><h2 style="font-size:22px">Resultados de la sesión</h2><p class="help" id="sumMeta"></p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="dlJson">Descargar sesión (.json)</button>
+      <button class="btn sec" id="dlFicha">Ficha (.csv)</button>
+      <button class="btn sec" id="dlMatriz">Matriz (.csv)</button>
+      <button class="btn sec" id="cpIA">Copiar para IA</button>
+      <button class="btn sec" id="bNew">Nueva sesión</button>
+    </div>
+  </div>
+  <div class="card"><h3>Ficha de testeo por usuario</h3><p class="help">Puedes corregir cualquier celda antes de descargar.</p><table id="tFicha"></table></div>
+  <div class="card"><h3>Tareas</h3><table id="tTasks"></table></div>
+  <div class="card"><h3>Hallazgos propuestos</h3><div class="note">Propuestas automáticas a partir del registro (reglas, no IA). Revisa, borra o corrige. "Acción en Figma" la completa el equipo.</div><table id="tMatriz"></table></div>
+</div></section>
+
+<!-- CONSOLIDAR -->
+<section class="view" id="vComb"><div class="sum">
+  <div class="card"><h2 style="font-size:22px">Consolidar sesiones</h2>
+    <p class="help">Carga los .json de cada participante. Se calcula la frecuencia de cada problema (cuántas personas lo vivieron) y el éxito por tarea.</p>
+    <div class="row" style="margin-top:12px"><input type="file" id="combFiles" multiple accept=".json"><button class="btn sec" id="combBack">Volver</button><button class="btn" id="dlComb" disabled>Matriz consolidada (.csv)</button></div>
+  </div>
+  <div class="card"><h3>Éxito por tarea</h3><table id="tCombTasks"></table></div>
+  <div class="card"><h3>Matriz de hallazgos consolidada</h3><table id="tComb"></table></div>
+</div></section>
+
+<script src="mapa.js"></script>
+<script>
+/* ================= utilidades ================= */
+const $=s=>document.querySelector(s);
+const M=window.MAPA||{S:{},H:{},R:{},P:[],inicio:{}};
+const fmt=ms=>{const s=Math.max(0,Math.round(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+function nombrePantalla(id){if(!id)return '—';return M.S[id]||('pantalla '+id)}
+function nombreElemento(id){
+  if(!id)return 'zona sin elemento';
+  const segs=String(id).split(';');
+  const last2=segs.slice(-2).join(';');
+  if(M.H[id])return M.H[id];if(M.H[last2])return M.H[last2];
+  for(const [p,n] of (M.P||[]))if(String(id).startsWith(p))return n;
+  const last=segs[segs.length-1];if(M.R[last])return M.R[last];
+  if(segs.length>1&&M.R[segs[segs.length-2]])return M.R[segs[segs.length-2]];
+  return 'elemento '+id;
+}
+function download(name,text,type){const blob=new Blob([text],{type:type||'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+const csv=rows=>'﻿'+rows.map(r=>r.map(c=>'"'+String(c??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
+function dot(id,st){const d=$(id);d.className='dot '+(st||'')}
+
+/* ================= tareas por defecto ================= */
+const TAREAS_DEF=[
+ {id:'T1',escenario:'Quieres ir este fin de semana al Valle de Colchagua. Busca qué evento hay y resérvalo.',criterio:'Llega a Colchagua y abre la reserva del evento'},
+ {id:'T2',escenario:'Quieres ir a una fiesta de la vendimia en marzo. Encuentra una y revisa su fecha y lugar.',criterio:'Abre la ficha de una fiesta o la agenda filtrada por vendimias'},
+ {id:'T3',escenario:'Tienes un presupuesto acotado. Compara los packs y reserva el que más te convenga.',criterio:'Abre el detalle de un pack y llega a la reserva'}
+];
+function renderTaskEditor(){const saved=JSON.parse(store.get('sala.tareas')||'null')||TAREAS_DEF;$('#taskEd').innerHTML=saved.map((t,i)=>`<div class="t"><input type="text" value="${esc(t.id)}" data-i="${i}" data-k="id"><textarea data-i="${i}" data-k="escenario">${esc(t.escenario)}</textarea><textarea data-i="${i}" data-k="criterio">${esc(t.criterio)}</textarea></div>`).join('')}
+function readTasks(){const arr=[];document.querySelectorAll('#taskEd .t').forEach(row=>{const o={};row.querySelectorAll('[data-k]').forEach(el=>o[el.dataset.k]=el.value.trim());if(o.id&&o.escenario)arr.push(o)});store.set('sala.tareas',JSON.stringify(arr));return arr}
+renderTaskEditor();
+$('#cCid').value=store.get('sala.cid')||'';
+if(store.get('sala.url'))$('#cUrl').value=store.get('sala.url');
+
+/* ================= estado ================= */
+let S=null;let timer=null;let demoTimer=null;let lastClick=null;let lastActivity=0;let rec=null;let wantVoice=false;
+function newSession(demo){
+  const dev=$('#cDev').value;
+  S={version:1,demo:!!demo,inicio:Date.now(),dispositivo:dev,
+     participante:{alias:$('#pAlias').value.trim()||'P?',perfil:$('#pPerfil').value.trim(),tecnologia:$('#pTec').value,modalidad:$('#pMod').value,fecha:new Date().toLocaleString('es-CL')},
+     tareas:readTasks().map(t=>({...t,inicio:null,fin:null,resultado:null})),
+     actual:null,pantalla:null,eventos:[],voz:[],marcas:[],figma:false,respaldo:false};
+}
+const now=()=>S?Date.now()-S.inicio:0;
+function ev(tipo,datos){const e={t:now(),tipo,tarea:S.actual,pantalla:S.pantalla,...datos};S.eventos.push(e);addLog(e);lastActivity=Date.now();return e}
+function addLog(e){
+  let cls='',txt='';
+  if(e.tipo==='pantalla'){cls='scr';txt='→ '+nombrePantalla(e.id)+(e.fuente==='respaldo'?' (respaldo)':'')}
+  else if(e.tipo==='clic'){cls=e.respuesta===false?'miss':'';txt=(e.respuesta===false?'✕ clic sin respuesta':'● clic')+' · '+(e.elemento||'')+(e.fuente==='respaldo'?' (respaldo '+e.x+','+e.y+')':'')}
+  else if(e.tipo==='estado'){txt='◐ cambio de estado · '+(e.elemento||'')}
+  else if(e.tipo==='voz'){cls='voz';txt='“'+e.texto+'”'}
+  else if(e.tipo==='moderador'){cls='mod';txt='★ '+e.texto}
+  else txt=e.texto||e.tipo;
+  const d=document.createElement('div');d.innerHTML=`<span class="t">${fmt(e.t)}</span><span class="${cls}">${esc(txt)}</span>`;
+  const tgt=e.tipo==='voz'?$('#vozLog'):$('#log');tgt.prepend(d);
+}
+
+/* ================= embed de Figma ================= */
+function embedUrl(){
+  const raw=$('#cUrl').value.trim();const cid=$('#cCid').value.trim();
+  let u;try{u=new URL(raw)}catch(e){return null}
+  const m=u.pathname.match(/\/proto\/([^/]+)\/?([^/]*)/);if(!m)return null;
+  const start=(S.dispositivo==='movil'?M.inicio.movil:M.inicio.escritorio)||u.searchParams.get('starting-point-node-id')||u.searchParams.get('node-id');
+  const nid=String(start).replace(':','-');
+  const q=new URLSearchParams({'node-id':nid,'starting-point-node-id':String(start).replace('-',':'),'embed-host':'sala-de-test','client-id':cid,'scaling':S.dispositivo==='movil'?'scale-down':'scale-down-width','content-scaling':'fixed','hide-ui':'1'});
+  return `https://embed.figma.com/proto/${m[1]}/${m[2]||'prototipo'}?${q}`;
+}
+function mountStage(){
+  const st=$('#stage');st.className='stage'+(S.dispositivo==='movil'?' movil':'');st.innerHTML='';
+  if(S.demo){st.innerHTML='<div class="demo-screen"><b>Modo demostración</b>Aquí va el prototipo de Figma. En este modo la sala simula una sesión (pantallas, clics, frases) para que veas cómo se registra todo. Puedes iniciar tareas y marcar fricciones igual que en una sesión real.</div>';return}
+  const src=embedUrl();if(!src){st.innerHTML='<div class="demo-screen"><b>Link no válido</b>Pega el link del prototipo de Figma (debe contener /proto/).</div>';return}
+  const f=document.createElement('iframe');f.id='fig';f.src=src;f.allow='fullscreen; clipboard-write';st.appendChild(f);
+  dot('#dFig','wait');
+  setTimeout(()=>{if(S&&!S.figma){const w=$('#warnFig');w.style.display='block';w.innerHTML='<b>Figma no está enviando avisos.</b> Revisa el Client ID y que esta dirección esté en "Allowed origins" de tu app. Si la persona no tiene sesión en Figma, pídele entrar con una cuenta gratuita. Mientras tanto, se usa el respaldo'+(S.respaldo?' (activo).':' (instala la extensión de respaldo).')}},12000);
+}
+let lastMouse={k:'',t:0};
+function onFigma(type,d){
+  if(!S)return;
+  if(!S.figma){S.figma=true;dot('#dFig','on');$('#warnFig').style.display='none'}
+  if(type==='INITIAL_LOAD'){ev('sistema',{texto:'Prototipo cargado'});return}
+  if(type==='PRESENTED_NODE_CHANGED'){if(d.presentedNodeId!==S.pantalla){S.pantalla=d.presentedNodeId;ev('pantalla',{id:d.presentedNodeId,fuente:'figma'});updateNow();afterScreen(d.presentedNodeId)}return}
+  if(type==='MOUSE_PRESS_OR_RELEASE'){
+    const k=(d.targetNodeId||'')+'|'+d.handled;const t=Date.now();if(k===lastMouse.k&&t-lastMouse.t<500)return;lastMouse={k,t};
+    if(d.presentedNodeId&&d.presentedNodeId!==S.pantalla){S.pantalla=d.presentedNodeId;updateNow()}
+    ev('clic',{fuente:'figma',respuesta:!!d.handled,id:d.targetNodeId||null,elemento:d.handled?nombreElemento(d.targetNodeId):('cerca de '+nombreElemento(d.targetNodeId)),pos:d.targetNodeMousePosition||null});renderTasks();return}
+  if(type==='NEW_STATE'){ev('estado',{id:d.nodeId,elemento:nombreElemento(d.nodeId),temporizado:!!d.isTimedChange});return}
+  if(type==='LOGIN_SCREEN_SHOWN'||type==='PASSWORD_SCREEN_SHOWN'){ev('sistema',{texto:'Figma pidió '+(type.startsWith('LOGIN')?'iniciar sesión':'contraseña')})}
+}
+function afterScreen(id){const n=nombrePantalla(id);if(/No incluido/.test(n))ev('sistema',{texto:'Intentó usar algo fuera del prototipo',clave:'fuera'});if(/Faltan datos/.test(n))ev('sistema',{texto:'Intentó enviar el formulario incompleto',clave:'faltan'})}
+function onRespaldo(d){
+  if(!S)return;if(!S.respaldo){S.respaldo=true;dot('#dBak','on')}
+  if(d.type==='hola')return;
+  if(d.type==='url'){const m=String(d.href||'').match(/node-id=([^&]+)/);if(!m)return;const id=decodeURIComponent(m[1]).replace('-',':');if(!S.figma&&id!==S.pantalla){S.pantalla=id;ev('pantalla',{id,fuente:'respaldo'});updateNow();afterScreen(id)}return}
+  if(d.type==='clic'&&!S.figma){ev('clic',{fuente:'respaldo',respuesta:null,x:Math.round(d.x),y:Math.round(d.y),vw:d.vw,vh:d.vh,elemento:'posición en pantalla'});renderTasks()}
+}
+window.addEventListener('message',e=>{
+  const d=e.data;if(!d||typeof d!=='object')return;
+  if(d.source==='sala-respaldo'&&/figma\.com$/.test(new URL(e.origin).hostname))return onRespaldo(d);
+  if(e.origin==='https://www.figma.com'&&d.type)return onFigma(d.type,d.data||{});
+});
+function updateNow(){$('#now').innerHTML='Pantalla actual: <b>'+esc(nombrePantalla(S.pantalla))+'</b>'}
+
+/* ================= voz ================= */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function startVoice(lang){
+  if(!lang){dot('#dVoz','');return}
+  if(!SR){dot('#dVoz','off');ev('sistema',{texto:'Este navegador no permite transcribir voz (usa Chrome)'});return}
+  wantVoice=true;rec=new SR();rec.lang=lang;rec.continuous=true;rec.interimResults=true;
+  rec.onresult=r=>{let interim='';for(let i=r.resultIndex;i<r.results.length;i++){const x=r.results[i];if(x.isFinal){const txt=x[0].transcript.trim();if(txt){S.voz.push({t:now(),texto:txt,tarea:S.actual,pantalla:S.pantalla});ev('voz',{texto:txt})}}else interim+=x[0].transcript}$('#interim').textContent=interim};
+  rec.onstart=()=>dot('#dVoz','on');
+  rec.onerror=e=>{dot('#dVoz','off');if(e.error==='not-allowed'){wantVoice=false;ev('sistema',{texto:'Micrófono bloqueado: permite el micrófono para transcribir'})}};
+  rec.onend=()=>{if(wantVoice&&S){try{rec.start()}catch(e){}}else dot('#dVoz','')};
+  try{rec.start()}catch(e){}
+}
+function stopVoice(){wantVoice=false;try{rec&&rec.stop()}catch(e){}}
+const vozCerca=(t,antes,despues)=>S.voz.filter(v=>v.t>=t-antes&&v.t<=t+despues).map(v=>v.texto).join(' ');
+
+/* ================= tareas en sesión ================= */
+function metricas(tk,ses){
+  ses=ses||S;const ini=tk.inicio,fin=tk.fin??(ses===S&&S.actual===tk.id?now():tk.fin);
+  const evs=ses.eventos.filter(e=>e.tarea===tk.id);
+  const clics=evs.filter(e=>e.tipo==='clic');const perdidos=clics.filter(e=>e.respuesta===false);
+  const pantallas=new Set(evs.filter(e=>e.tipo==='pantalla').map(e=>e.id));
+  let maxGap=0,gapAt=null,gapScr=null;let prev=ini;for(const e of evs.filter(e=>e.tipo==='clic')){if(e.t-prev>maxGap){maxGap=e.t-prev;gapAt=prev;gapScr=e.pantalla}prev=e.t}if(fin!=null&&fin-prev>maxGap){maxGap=fin-prev;gapAt=prev;gapScr=null}
+  return {dur:ini!=null&&fin!=null?fin-ini:null,clics:clics.length,perdidos:perdidos.length,pantallas:pantallas.size,maxGap,gapAt,gapScr,perdidosEv:perdidos};
+}
+function renderTasks(){
+  if(!S)return;
+  $('#taskList').innerHTML=S.tareas.map(tk=>{const m=metricas(tk);const cur=S.actual===tk.id;const res=tk.resultado?`<div class="res" style="color:${tk.resultado==='Completada'?'var(--ok)':tk.resultado==='No completada'?'var(--err)':'var(--warn)'}">${tk.resultado}</div>`:'';
+   return `<div class="task ${cur?'cur':''}"><h3>${esc(tk.id)}</h3><p>${esc(tk.escenario)}</p><p><b>Éxito:</b> ${esc(tk.criterio)}</p>${res}
+   <div class="metrics"><div class="metric"><b>${m.dur!=null?fmt(m.dur):'—'}</b><span>tiempo</span></div><div class="metric"><b>${m.clics}</b><span>clics</span></div><div class="metric"><b style="color:${m.perdidos?'var(--err)':''}">${m.perdidos}</b><span>sin respuesta</span></div></div>
+   <div class="acts">${!tk.inicio?`<button class="btn" data-a="ini" data-t="${tk.id}">Iniciar</button>`:cur?`<button class="btn ok" data-a="Completada" data-t="${tk.id}">Completada</button><button class="btn warn" data-a="Completada con dificultad" data-t="${tk.id}">Con dificultad</button><button class="btn err" data-a="No completada" data-t="${tk.id}">No completada</button>`:`<button class="btn sec" data-a="ini" data-t="${tk.id}">Repetir</button>`}</div></div>`}).join('');
+}
+$('#taskList').addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;const tk=S.tareas.find(t=>t.id===b.dataset.t);
+  if(b.dataset.a==='ini'){if(S.actual&&S.actual!==tk.id){const c=S.tareas.find(t=>t.id===S.actual);if(c&&!c.fin){c.fin=now();c.resultado=c.resultado||'Sin cerrar'}}tk.inicio=now();tk.fin=null;tk.resultado=null;S.actual=tk.id;ev('moderador',{texto:'Inicio '+tk.id})}
+  else{tk.fin=now();tk.resultado=b.dataset.a;ev('moderador',{texto:tk.id+' · '+b.dataset.a});S.actual=null}
+  renderTasks()});
+$('#bMark').onclick=()=>{if(!S)return;const t=now();const nota=$('#markTxt').value.trim();const m={t,nota,pantalla:S.pantalla,tarea:S.actual,voz:vozCerca(t,15000,3000)};S.marcas.push(m);ev('moderador',{texto:'Fricción marcada'+(nota?': '+nota:'')});$('#markTxt').value=''};
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('#'+b.dataset.p).classList.add('on')});
+$('#bRestart').onclick=()=>{const f=$('#fig');if(f)f.contentWindow.postMessage({type:'RESTART'},'https://www.figma.com');ev('moderador',{texto:'Prototipo reiniciado'})};
+
+/* ================= iniciar / terminar ================= */
+function begin(demo){
+  store.set('sala.cid',$('#cCid').value.trim());store.set('sala.url',$('#cUrl').value.trim());
+  newSession(demo);
+  $('#vSetup').classList.remove('on');$('#vSession').classList.add('on');$('#log').innerHTML='';$('#vozLog').innerHTML='';
+  dot('#dFig',demo?'':'wait');dot('#dBak','');
+  mountStage();renderTasks();ev('sistema',{texto:'Sesión iniciada · '+S.participante.alias});
+  clearInterval(timer);timer=setInterval(()=>{$('#clock').textContent=fmt(now());if(S.actual)renderTasks()},1000);
+  startVoice($('#cVoz').value);
+  if(demo)runDemo();
+}
+$('#bStart').onclick=()=>{if(!$('#cCid').value.trim()&&!confirm('Sin Client ID, Figma no enviará avisos (solo funcionará el respaldo). ¿Iniciar igual?'))return;begin(false)};
+$('#bDemo').onclick=()=>begin(true);
+$('#bEnd').onclick=()=>{if(!S)return;if(S.actual){const c=S.tareas.find(t=>t.id===S.actual);c.fin=now();c.resultado=c.resultado||'Sin cerrar'}S.fin=now();stopVoice();clearInterval(timer);clearInterval(demoTimer);
+  $('#vSession').classList.remove('on');$('#vSum').classList.add('on');renderSummary()};
+$('#bNew').onclick=()=>{S=null;$('#vSum').classList.remove('on');$('#vSetup').classList.add('on');$('#clock').textContent='00:00';const a=$('#pAlias');const n=parseInt((a.value.match(/\d+/)||[0])[0])+1;a.value='P'+n;$('#pPerfil').value=''};
+
+/* ================= hallazgos (reglas) ================= */
+function hallazgos(ses){
+  const out=[];const add=(clave,problema,sev,evid,tarea)=>out.push({clave,problema,severidad:sev,tarea,evidencia:evid,accion:''});
+  for(const tk of ses.tareas){if(!tk.inicio&&tk.inicio!==0)continue;const m=metricas(tk,ses);
+    if(tk.resultado==='No completada')add('nc-'+tk.id,`No logró completar ${tk.id}: ${tk.escenario}`,'Alta',`${fmt(tk.inicio)}–${fmt(tk.fin)} · ${vozResumen(ses,tk.inicio,tk.fin)}`,tk.id);
+    else if(tk.resultado==='Completada con dificultad')add('cd-'+tk.id,`Completó ${tk.id} con dificultad`,'Media',`${fmt(tk.inicio)}–${fmt(tk.fin)} · ${vozResumen(ses,tk.inicio,tk.fin)}`,tk.id);
+    const porPant={};for(const e of m.perdidosEv){const k=e.pantalla||'?';(porPant[k]=porPant[k]||[]).push(e)}
+    for(const [p,arr] of Object.entries(porPant)){if(arr.length>=2){const zonas=[...new Set(arr.map(e=>e.elemento))].slice(0,3).join(', ');add('miss-'+p,`Clics sin respuesta en ${nombrePantalla(p)} (${zonas})`,arr.length>=4?'Alta':'Media',`${arr.length} clics · ${fmt(arr[0].t)} · “${vozCercaS(ses,arr[0].t,8000,4000)}”`,tk.id)}}
+    if(m.maxGap>=15000)add('duda-'+(m.gapScr||tk.id),`Duda prolongada (${Math.round(m.maxGap/1000)} s sin acción) en ${nombrePantalla(m.gapScr||ses.eventos.find(e=>e.t>=m.gapAt)?.pantalla)}`,m.maxGap>=30000?'Media':'Baja',`${fmt(m.gapAt)} · “${vozCercaS(ses,m.gapAt,2000,m.maxGap)}”`,tk.id);
+  }
+  for(const e of ses.eventos.filter(e=>e.clave==='fuera')){const prev=[...ses.eventos].reverse().find(x=>x.t<=e.t&&x.tipo==='clic');add('fuera-'+(prev?prev.elemento:''),`Intentó usar algo que no está en el prototipo${prev?' ('+prev.elemento+')':''}: espera esa función`,'Baja',fmt(e.t),e.tarea)}
+  for(const e of ses.eventos.filter(e=>e.clave==='faltan'))add('faltan','Intentó enviar el formulario de viñas sin completar los campos','Media',fmt(e.t),e.tarea);
+  for(const m of ses.marcas)add('marca-'+m.t,`Fricción marcada en ${nombrePantalla(m.pantalla)}${m.nota?': '+m.nota:''}`,'Media',`${fmt(m.t)} · “${m.voz||'sin voz'}”`,m.tarea);
+  const seen=new Set();return out.filter(h=>{if(seen.has(h.clave))return false;seen.add(h.clave);return true});
+}
+function vozCercaS(ses,t,a,d){return (ses.voz||[]).filter(v=>v.t>=t-a&&v.t<=t+d).map(v=>v.texto).join(' ').slice(0,180)||'sin voz registrada'}
+function vozResumen(ses,a,b){const txt=(ses.voz||[]).filter(v=>v.t>=a&&v.t<=b).map(v=>v.texto).join(' ');return txt?('“'+txt.slice(0,160)+(txt.length>160?'…':'')+'”'):'sin voz registrada'}
+
+/* ================= resumen ================= */
+function fichaRows(ses){
+  const p=ses.participante;const ts=ses.tareas.filter(t=>t.inicio!=null);
+  return [
+    ['Nombre / Alias del participante',p.alias],
+    ['Perfil del usuario (edad, ocupación, nivel de familiaridad tecnológica)',[p.perfil,'familiaridad '+p.tecnologia.toLowerCase()].filter(Boolean).join(' · ')],
+    ['Fecha y modalidad del testeo',p.fecha+' · '+p.modalidad+' · '+(ses.dispositivo==='movil'?'móvil':'escritorio')],
+    ['Tareas asignadas',ts.map(t=>t.id+': '+t.escenario).join('\n')],
+    ['Tiempo de ejecución por tarea',ts.map(t=>{const m=metricas(t,ses);return t.id+': '+(m.dur!=null?fmt(m.dur):'—')}).join('\n')],
+    ['Observaciones y citas textuales (pensar en voz alta)',(ses.marcas.map(m=>fmt(m.t)+' '+(m.nota?m.nota+' · ':'')+'“'+(m.voz||'')+'”').join('\n'))||(ses.voz||[]).slice(0,6).map(v=>fmt(v.t)+' “'+v.texto+'”').join('\n')],
+    ['Puntos de fricción o errores detectados',hallazgos(ses).map(h=>'• '+h.problema).join('\n')||'Sin fricciones registradas'],
+    ['Nivel de éxito de la tarea (Completada / Completada con dificultad / No completada)',ts.map(t=>t.id+': '+(t.resultado||'Sin cerrar')).join('\n')]
+  ];
+}
+let H=[];
+function renderSummary(){
+  const ses=S;H=hallazgos(ses);
+  $('#sumMeta').textContent=`${ses.participante.alias} · ${ses.participante.fecha} · duración ${fmt(ses.fin)} · ${ses.eventos.length} eventos · ${ses.voz.length} frases · fuente: ${ses.figma?'avisos de Figma':ses.respaldo?'respaldo (extensión)':'sin datos del prototipo'}${ses.demo?' · DEMOSTRACIÓN':''}`;
+  $('#tFicha').innerHTML='<tr><th style="width:34%">Campo</th><th>Detalle / Registro</th></tr>'+fichaRows(ses).map(r=>`<tr><td>${esc(r[0])}</td><td contenteditable style="white-space:pre-line">${esc(r[1])}</td></tr>`).join('');
+  $('#tTasks').innerHTML='<tr><th>Tarea</th><th>Resultado</th><th>Tiempo</th><th>Clics</th><th>Sin respuesta</th><th>Pantallas</th><th>Mayor pausa</th></tr>'+ses.tareas.filter(t=>t.inicio!=null).map(t=>{const m=metricas(t,ses);return `<tr><td>${esc(t.id)}</td><td>${esc(t.resultado||'Sin cerrar')}</td><td>${m.dur!=null?fmt(m.dur):'—'}</td><td>${m.clics}</td><td>${m.perdidos}</td><td>${m.pantallas}</td><td>${Math.round(m.maxGap/1000)} s</td></tr>`}).join('');
+  renderMatriz('#tMatriz',H.map(h=>({...h,frecuencia:'Única (1/1)'})));
+}
+function renderMatriz(sel,rows){$(sel).innerHTML='<tr><th>Problema</th><th>Severidad</th><th>Frecuencia</th><th>Acción en Figma</th><th>Evidencia</th></tr>'+rows.map(h=>`<tr><td contenteditable>${esc(h.problema)}</td><td contenteditable class="sev-${h.severidad}">${esc(h.severidad)}</td><td contenteditable>${esc(h.frecuencia)}</td><td contenteditable>${esc(h.accion||'')}</td><td contenteditable>${esc(h.evidencia)}</td></tr>`).join('')}
+const tableRows=sel=>[...document.querySelectorAll(sel+' tr')].map(tr=>[...tr.children].map(td=>td.innerText.trim()));
+$('#dlJson').onclick=()=>download(`sesion-${S.participante.alias}.json`,JSON.stringify(S,null,1),'application/json');
+$('#dlFicha').onclick=()=>download(`ficha-${S.participante.alias}.csv`,csv(tableRows('#tFicha')),'text/csv;charset=utf-8');
+$('#dlMatriz').onclick=()=>download(`matriz-${S.participante.alias}.csv`,csv(tableRows('#tMatriz')),'text/csv;charset=utf-8');
+$('#cpIA').onclick=async()=>{const resumen={participante:S.participante,dispositivo:S.dispositivo,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,criterio:t.criterio,resultado:t.resultado,...(({dur,clics,perdidos,pantallas,maxGap})=>({tiempo_s:dur!=null?Math.round(dur/1000):null,clics,clics_sin_respuesta:perdidos,pantallas,mayor_pausa_s:Math.round(maxGap/1000)}))(metricas(t,S))})),eventos:S.eventos.filter(e=>e.tipo!=='voz').map(e=>({t:fmt(e.t),tipo:e.tipo,tarea:e.tarea,pantalla:nombrePantalla(e.pantalla),elemento:e.elemento,respuesta:e.respuesta,texto:e.texto})),voz:S.voz.map(v=>({t:fmt(v.t),tarea:v.tarea,texto:v.texto})),marcas:S.marcas.map(m=>({t:fmt(m.t),nota:m.nota,pantalla:nombrePantalla(m.pantalla),voz:m.voz})),hallazgos_propuestos:H};
+  const prompt=`Eres investigador/a UX. Con este registro de un test de usabilidad moderado del prototipo de Enoturismo Chile, completa:\n1) Ficha de testeo por usuario con los campos: Nombre/Alias, Perfil, Fecha y modalidad, Tareas asignadas, Tiempo por tarea, Observaciones y citas textuales (solo frases que aparecen en "voz"), Puntos de fricción o errores, Nivel de éxito (Completada / Completada con dificultad / No completada).\n2) Matriz de hallazgos: Problema | Severidad (Alta, Media, Baja) | Frecuencia (en esta sesión) | Acción en Figma (propuesta concreta) | Evidencia (minuto y cita).\nNo inventes datos que no estén en el registro; si algo no se puede saber, dilo.\n\nREGISTRO:\n${JSON.stringify(resumen,null,1)}`;
+  try{await navigator.clipboard.writeText(prompt);$('#cpIA').textContent='Copiado ✓'}catch(e){download(`para-ia-${S.participante.alias}.txt`,prompt)}setTimeout(()=>$('#cpIA').textContent='Copiar para IA',2500)};
+
+/* ================= consolidar ================= */
+let COMB=[];
+$('#bCombineOpen').onclick=()=>{$('#vSetup').classList.remove('on');$('#vComb').classList.add('on')};
+$('#combBack').onclick=()=>{$('#vComb').classList.remove('on');$('#vSetup').classList.add('on')};
+$('#combFiles').onchange=async e=>{
+  const sess=[];for(const f of e.target.files){try{sess.push(JSON.parse(await f.text()))}catch(err){alert('No pude leer '+f.name)}}
+  if(!sess.length)return;const N=sess.length;
+  const tasks={};for(const s of sess)for(const t of s.tareas){if(t.inicio==null)continue;const m=metricas(t,s);const o=tasks[t.id]=tasks[t.id]||{n:0,ok:0,dif:0,no:0,tiempos:[]};o.n++;if(t.resultado==='Completada')o.ok++;else if(t.resultado==='Completada con dificultad')o.dif++;else o.no++;if(m.dur!=null)o.tiempos.push(m.dur)}
+  $('#tCombTasks').innerHTML='<tr><th>Tarea</th><th>Participantes</th><th>Completada</th><th>Con dificultad</th><th>No completada</th><th>Tiempo promedio</th></tr>'+Object.entries(tasks).map(([k,o])=>`<tr><td>${k}</td><td>${o.n}</td><td>${o.ok}</td><td>${o.dif}</td><td>${o.no}</td><td>${o.tiempos.length?fmt(o.tiempos.reduce((a,b)=>a+b,0)/o.tiempos.length):'—'}</td></tr>`).join('');
+  const groups={};for(const s of sess){const seen=new Set();for(const h of hallazgos(s)){const k=h.clave.replace(/^marca-\d+/,'marca-'+h.problema);if(seen.has(k))continue;seen.add(k);const g=groups[k]=groups[k]||{...h,quienes:[],evid:[],sevs:[]};g.quienes.push(s.participante.alias);g.evid.push(s.participante.alias+': '+h.evidencia);g.sevs.push(h.severidad)}}
+  const rank={Alta:3,Media:2,Baja:1};
+  COMB=Object.values(groups).map(g=>{const n=g.quienes.length;const fr=n/N>=0.6?'Constante':n>1?'Ocasional':'Única';const sev=g.sevs.sort((a,b)=>rank[b]-rank[a])[0];return {problema:g.problema,severidad:sev,frecuencia:`${fr} (${n}/${N}: ${g.quienes.join(', ')})`,accion:'',evidencia:g.evid.join(' | '),score:rank[sev]*10+n}}).sort((a,b)=>b.score-a.score);
+  renderMatriz('#tComb',COMB);$('#dlComb').disabled=false};
+$('#dlComb').onclick=()=>download('matriz-consolidada.csv',csv(tableRows('#tComb')),'text/csv;charset=utf-8');
+
+/* ================= demostración ================= */
+function runDemo(){
+  const L=M.inicio.escritorio;const steps=[
+    [1,'INITIAL_LOAD',{}],[2,'PRESENTED_NODE_CHANGED',{presentedNodeId:L}],
+    [3,'voz','Bueno, voy a buscar Colchagua'],[5,'MOUSE_PRESS_OR_RELEASE',{presentedNodeId:L,handled:true,targetNodeId:'I700:9582;684:5811;669:4777'}],
+    [6,'MOUSE_PRESS_OR_RELEASE',{presentedNodeId:L,handled:false,targetNodeId:'I350:14829;350:14593'}],
+    [7,'voz','mmm esto no hace nada, ¿dónde están los valles?'],[8,'MOUSE_PRESS_OR_RELEASE',{presentedNodeId:L,handled:false,targetNodeId:'I350:14829;350:14601'}],
+    [10,'MOUSE_PRESS_OR_RELEASE',{presentedNodeId:L,handled:true,targetNodeId:'I700:9582;245:2446;639:12176'}],
+    [12,'MOUSE_PRESS_OR_RELEASE',{presentedNodeId:L,handled:true,targetNodeId:'I379:4344;334:5511;331:7146'}],
+    [13,'voz','ah ya, acá está Colchagua, vendimia el 6 de marzo'],[15,'MOUSE_PRESS_OR_RELEASE',{presentedNodeId:L,handled:true,targetNodeId:'I379:4344;334:5511;447:4227;19:58'}],
+    [16,'PRESENTED_NODE_CHANGED',{presentedNodeId:'639:5295'}],[18,'MOUSE_PRESS_OR_RELEASE',{presentedNodeId:'639:5295',handled:true,targetNodeId:'I684:8223;662:179'}],
+    [19,'NEW_STATE',{nodeId:'I684:8223',newVariantId:'x'}],[21,'MOUSE_PRESS_OR_RELEASE',{presentedNodeId:'639:5295',handled:true,targetNodeId:'639:5312'}],
+    [22,'PRESENTED_NODE_CHANGED',{presentedNodeId:'709:9284'}],[23,'PRESENTED_NODE_CHANGED',{presentedNodeId:'684:8199'}],[24,'voz','listo, me manda a pagar'],
+    [27,'MOUSE_PRESS_OR_RELEASE',{presentedNodeId:'684:8199',handled:true,targetNodeId:'684:8208'}],[28,'PRESENTED_NODE_CHANGED',{presentedNodeId:'706:9525'}],[31,'PRESENTED_NODE_CHANGED',{presentedNodeId:L}]
+  ];
+  let i=0;const t0=Date.now();
+  const tk=S.tareas[0];if(tk){tk.inicio=now();S.actual=tk.id;ev('moderador',{texto:'Inicio '+tk.id+' (demo)'});renderTasks()}
+  clearInterval(demoTimer);demoTimer=setInterval(()=>{const el=(Date.now()-t0)/1000;while(i<steps.length&&steps[i][0]<=el){const [_,type,d]=steps[i++];if(type==='voz'){S.voz.push({t:now(),texto:d,tarea:S.actual,pantalla:S.pantalla});ev('voz',{texto:d})}else onFigma(type,d)}if(i>=steps.length){clearInterval(demoTimer);if(tk&&!tk.fin){tk.fin=now();tk.resultado='Completada con dificultad';S.actual=null;ev('moderador',{texto:tk.id+' · Completada con dificultad (demo)'});renderTasks()}}},250);
+}
+window.__sala={onFigma,onRespaldo,get S(){return S}};
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Sala de test · respaldo",
+  "version": "0.1.0",
+  "description": "Respaldo para la Sala de test: registra clics y cambios de pantalla dentro de un prototipo de Figma insertado y los envía a la sala.",
+  "content_scripts": [
+    {
+      "matches": ["https://embed.figma.com/*", "https://www.figma.com/proto/*", "https://www.figma.com/embed*"],
+      "js": ["respaldo.js"],
+      "all_frames": true,
+      "run_at": "document_start"
+    }
+  ]
+}
