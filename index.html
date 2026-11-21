@@ -84,6 +84,13 @@ td[contenteditable]{background:#fffdf7}
 .note{background:var(--claro);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13px;line-height:1.5}
 .warnbox{background:#fff4d6;border:1px solid #f0d27a;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px;display:none}
 .cid a{color:#fff;font-size:12px;text-decoration:underline;white-space:nowrap;margin:0 4px}
+.devs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.dev{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 12px;border:1.5px solid var(--linea);border-radius:14px;background:#fff;color:var(--suave)}
+.dev svg{width:44px;height:44px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;margin-bottom:4px}
+.dev b{color:var(--texto);font-weight:600;font-size:15px}.dev span{font-size:12px}
+.dev:hover{border-color:var(--lila)}
+.dev.on{border-color:var(--marca);background:var(--claro);color:var(--marca);box-shadow:0 0 0 3px var(--claro)}.dev.on b{color:var(--marca)}
+.devs.auto .dev{opacity:.45}
 .modos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .modo{display:block;border:1.5px solid var(--linea);border-radius:14px;padding:14px 16px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:13px;color:var(--suave);margin:0}
 .modo input{margin-right:8px}.modo b{color:var(--marca);font-size:15px}.modo span{display:block;margin-top:6px;line-height:1.5}
@@ -106,7 +113,7 @@ td[contenteditable]{background:#fffdf7}
 .zonas{font-size:12px;margin-top:8px;line-height:1.7}
 .msgbox{display:flex;gap:8px;margin:12px 0}.msgbox input{flex:1}
 .aviso-fin{background:#e6f4e3;border:1px solid #b5d9ae;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px;display:none}
-@media (max-width:700px){.tasks .t{grid-template-columns:1fr;padding-bottom:12px;border-bottom:1px dashed var(--linea)}.tasks .t input[data-k=id]{width:80px}.setup,.sum{margin:16px auto;padding:0 12px 48px}.card{padding:16px}.row .btn{flex:1 1 100%}.linkbox{flex-wrap:wrap}.wait b{font-size:20px}th,td{padding:6px}.sum table{display:block;overflow-x:auto}}
+@media (max-width:700px){.devs{gap:8px}.dev{padding:12px 6px}.dev svg{width:34px;height:34px}.tasks .t{grid-template-columns:1fr;padding-bottom:12px;border-bottom:1px dashed var(--linea)}.tasks .t input[data-k=id]{width:80px}.setup,.sum{margin:16px auto;padding:0 12px 48px}.card{padding:16px}.row .btn{flex:1 1 100%}.linkbox{flex-wrap:wrap}.wait b{font-size:20px}th,td{padding:6px}.sum table{display:block;overflow-x:auto}}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}.modos{grid-template-columns:1fr}.tabs{overflow-x:auto}.tabs button{flex:1 0 auto;padding:10px 14px}.panel{border-left:0;border-top:1px solid var(--linea)}.session.on{grid-template-columns:1fr;grid-template-rows:minmax(200px,42%) minmax(0,1fr)}.stage.movil iframe{width:100%;border-radius:0}}
 </style>
 </head>
@@ -134,8 +141,8 @@ td[contenteditable]{background:#fffdf7}
   <div class="card grid2">
     <div><label>Link del prototipo (Figma)</label><input type="text" id="cUrl" value="https://www.figma.com/proto/JvIrZGRXpBwJmZrdSsB0Gf/enoturismo-landing"><p class="help">Desde Figma: Compartir prototipo → Copiar link.</p></div>
     <div><label>Client ID (app de Figma)</label><p class="help">Está siempre arriba, en la barra morada: puedes editarlo y copiarlo en cualquier momento. Se guarda solo en este navegador. Sin él, Figma no envía los avisos (usa el modo demostración para probar).</p></div>
-    <div><label>Dispositivo</label><select id="cDev"><option value="auto" selected>Automático: según la pantalla</option><option value="escritorio">Escritorio (1920)</option><option value="tablet">Tablet (1024)</option><option value="movil">Móvil (390)</option></select></div>
-    <div><label>Transcripción de voz</label><select id="cVoz"><option value="es-CL">Activada · español (Chile)</option><option value="es-ES">Activada · español (España)</option><option value="">Desactivada</option></select><p class="help">Usa el reconocimiento de voz de Chrome (servidores de Google). No se guarda audio, solo texto. Inclúyelo en el consentimiento.</p><button type="button" class="btn sec" id="bMicTest" style="margin-top:8px">Probar micrófono y transcripción</button><div class="micst" id="micSt"></div></div>
+    <div style="grid-column:1/-1"><label>Versión del prototipo</label><div class="devs" role="radiogroup" aria-label="Versión del prototipo"><button type="button" class="dev" role="radio" aria-checked="false" data-dev="escritorio"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="8" width="38" height="25" rx="3"/><path d="M18 40h12M24 33v7"/></svg><b>Escritorio</b><span>1920 px</span></button><button type="button" class="dev" role="radio" aria-checked="false" data-dev="tablet"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="5" width="28" height="38" rx="4"/><path d="M21 38h6"/></svg><b>Tablet</b><span>1024 px</span></button><button type="button" class="dev" role="radio" aria-checked="false" data-dev="movil"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="15" y="5" width="18" height="38" rx="4"/><path d="M22 9h4M22 38h4"/></svg><b>Celular</b><span>390 px</span></button></div><label class="chk" style="margin-top:10px"><input type="checkbox" id="cDevAuto">Elegir sola según la pantalla del participante (menos de 768 px: celular · hasta 1279: tablet · más: escritorio)</label><select id="cDev" hidden><option value="auto">Automático</option><option value="escritorio">Escritorio (1920)</option><option value="tablet">Tablet (1024)</option><option value="movil">Móvil (390)</option></select></div>
+    <div style="grid-column:1/-1"><label>Transcripción de voz</label><select id="cVoz"><option value="es-CL">Activada · español (Chile)</option><option value="es-ES">Activada · español (España)</option><option value="">Desactivada</option></select><p class="help">Usa el reconocimiento de voz de Chrome (servidores de Google). No se guarda audio, solo texto. Inclúyelo en el consentimiento.</p><button type="button" class="btn sec" id="bMicTest" style="margin-top:8px">Probar micrófono y transcripción</button><div class="micst" id="micSt"></div></div>
   </div>
   <div class="card">
     <h3 style="margin-bottom:12px">Participante</h3>
@@ -269,6 +276,13 @@ $('#bCopyCid').onclick=async()=>{const v=$('#cCid').value.trim();if(!v){$('#cidM
 $('#bApplyCid').onclick=()=>{if(!S||S.demo)return;S.figma=false;mountStage();ev('moderador',{texto:'Prototipo recargado con otro Client ID'});$('#bApplyCid').style.display='none'};
 if(store.get('sala.url'))$('#cUrl').value=store.get('sala.url');
 
+/* ================= versión del prototipo (3 tarjetas) ================= */
+function devUI(){const v=$('#cDev').value,auto=v==='auto';$('#cDevAuto').checked=auto;$('.devs').classList.toggle('auto',auto);
+  document.querySelectorAll('.dev').forEach(b=>{const on=!auto&&b.dataset.dev===v;b.classList.toggle('on',on);b.setAttribute('aria-checked',on)})}
+document.querySelectorAll('.dev').forEach(b=>b.onclick=()=>{$('#cDev').value=b.dataset.dev;store.set('sala.dev',b.dataset.dev);devUI()});
+$('#cDevAuto').onchange=e=>{const v=e.target.checked?'auto':(store.get('sala.devManual')||'escritorio');$('#cDev').value=v;store.set('sala.dev',v);devUI()};
+document.querySelectorAll('.dev').forEach(b=>b.addEventListener('click',()=>store.set('sala.devManual',b.dataset.dev)));
+$('#cDev').value=store.get('sala.dev')||'escritorio';devUI();
 /* ================= estado ================= */
 function devAuto(){const w=window.innerWidth;const tel=/iPhone|Android.+Mobile/i.test(navigator.userAgent);return (w<768||tel)?'movil':(w<1280?'tablet':'escritorio')}
 function modoActual(){const i=document.querySelector('input[name=modo]:checked');return i?i.value:'presencial'}
