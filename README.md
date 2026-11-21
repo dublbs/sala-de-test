@@ -31,7 +31,21 @@ Abre `index.html` en Chrome y presiona **Probar en modo demostración**. Simula 
    2. Activa el **Modo de desarrollador**.
    3. Presiona **Cargar descomprimida** y elige la carpeta `extension-respaldo`.
 
-## Hacer una sesión
+## Modo remoto en vivo (link para el participante)
+
+1. En la sala, elige **Remota en vivo (link)**, revisa las tareas y su **pantalla de éxito**, y presiona **Crear link para el participante**.
+2. Copia el link y envíaselo. El participante necesita Chrome en computador.
+3. Al abrir el link, el participante acepta, comparte **esta pestaña** y el micrófono, y hace las tareas una por una (Empezar · Terminé · Me rindo). Si llega a la pantalla de éxito, la tarea se marca sola.
+4. Tú ves en vivo su pantalla, escuchas su voz, y en la sala ves los clics, la transcripción y el **mapa de calor** (pestaña Calor). Puedes enviarle mensajes y reiniciar su prototipo.
+5. Cuando termine, presiona **Terminar sesión**: ficha, matriz y mapa de calor (descargable en PNG).
+
+La conexión es directa entre los dos navegadores (PeerJS). No se graba video ni audio. Tu pestaña debe quedar abierta durante el test.
+
+**Mapa de calor:** se dibuja sobre un esquema de cada pantalla (bloques y zonas con clic, exportados del Figma en `pantallas.js`). Si los puntos aparecen corridos en páginas largas, desactiva "Sumar scroll".
+
+**Client ID del equipo:** pégalo en la constante `CID_EQUIPO` de `index.html` para que venga cargado siempre. El botón "Mi app en Figma ↗" abre la página donde se copia.
+
+## Hacer una sesión (presencial)
 
 1. Abre la sala publicada.
 2. Pega el link del prototipo, el Client ID, el participante y las tareas (vienen T1 a T3 cargadas).
