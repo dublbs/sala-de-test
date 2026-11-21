@@ -15,6 +15,15 @@ h1,h2,h3{margin:0;color:var(--marca)}
 .top{display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--marca);color:#fff}
 .top h1{color:#fff;font-size:16px;font-weight:600}
 .top .sp{flex:1}
+.cid{display:inline-flex;align-items:center;gap:6px;padding:4px 4px 4px 12px;border-radius:999px;background:rgba(255,255,255,.14);font-size:12px}
+.cid label{margin:0;color:#fff;font-size:12px;font-weight:600;white-space:nowrap}
+.cid input{width:220px;padding:5px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.18);color:#fff;font:12px ui-monospace,Menlo,monospace}
+.cid input::placeholder{color:rgba(255,255,255,.6)}
+.cid input.vacio{border-color:#ffd25e}
+.cid button{padding:5px 12px;border-radius:999px;border:0;background:#fff;color:var(--marca);font:600 12px inherit;cursor:pointer}
+.cid button.sec{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
+.cid .ok{color:#7be07b;font-weight:600}
+@media (max-width:900px){.top{flex-wrap:wrap}.cid{order:9;width:100%}.cid input{flex:1;width:auto}}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.14);font-size:12px}
 .dot{width:8px;height:8px;border-radius:50%;background:#bbb}.dot.on{background:#7be07b}.dot.off{background:#ff8a8a}.dot.wait{background:#ffd25e}
 .btn{border:0;border-radius:999px;padding:10px 18px;background:var(--marca);color:#fff;font-weight:500}
@@ -84,6 +93,7 @@ td[contenteditable]{background:#fffdf7}
   <span class="pill"><span class="dot" id="dBak"></span>Respaldo</span>
   <span class="pill"><span class="dot" id="dVoz"></span><span id="lVoz">Voz</span><span class="vu"><i id="vu"></i></span></span>
   <span class="sp"></span>
+  <span class="cid" title="Client ID de la app de Figma. Se guarda en este navegador."><label for="cCid">Client ID</label><input type="text" id="cCid" placeholder="pega aquí el Client ID" spellcheck="false" autocomplete="off"><button type="button" id="bCopyCid">Copiar</button><button type="button" class="sec" id="bApplyCid" style="display:none">Aplicar al prototipo</button><span class="ok" id="cidMsg"></span></span>
   <span class="pill" id="clock">00:00</span>
 </div>
 
@@ -95,7 +105,7 @@ td[contenteditable]{background:#fffdf7}
   </div>
   <div class="card grid2">
     <div><label>Link del prototipo (Figma)</label><input type="text" id="cUrl" value="https://www.figma.com/proto/JvIrZGRXpBwJmZrdSsB0Gf/enoturismo-landing"><p class="help">Desde Figma: Compartir prototipo → Copiar link.</p></div>
-    <div><label>Client ID (app de Figma)</label><input type="text" id="cCid" placeholder="ej. 6rtt685EC…"><p class="help">Se guarda solo en este navegador. Sin él, Figma no envía los avisos (usa el modo demostración para probar).</p></div>
+    <div><label>Client ID (app de Figma)</label><p class="help">Está siempre arriba, en la barra morada: puedes editarlo y copiarlo en cualquier momento. Se guarda solo en este navegador. Sin él, Figma no envía los avisos (usa el modo demostración para probar).</p></div>
     <div><label>Dispositivo</label><select id="cDev"><option value="escritorio">Escritorio (1920)</option><option value="movil">Móvil (390)</option></select></div>
     <div><label>Transcripción de voz</label><select id="cVoz"><option value="es-CL">Activada · español (Chile)</option><option value="es-ES">Activada · español (España)</option><option value="">Desactivada</option></select><p class="help">Usa el reconocimiento de voz de Chrome (servidores de Google). No se guarda audio, solo texto. Inclúyelo en el consentimiento.</p><button type="button" class="btn sec" id="bMicTest" style="margin-top:8px">Probar micrófono y transcripción</button><div class="micst" id="micSt"></div></div>
   </div>
@@ -198,7 +208,14 @@ const TAREAS_DEF=[
 function renderTaskEditor(){const saved=JSON.parse(store.get('sala.tareas')||'null')||TAREAS_DEF;$('#taskEd').innerHTML=saved.map((t,i)=>`<div class="t"><input type="text" value="${esc(t.id)}" data-i="${i}" data-k="id"><textarea data-i="${i}" data-k="escenario">${esc(t.escenario)}</textarea><textarea data-i="${i}" data-k="criterio">${esc(t.criterio)}</textarea></div>`).join('')}
 function readTasks(){const arr=[];document.querySelectorAll('#taskEd .t').forEach(row=>{const o={};row.querySelectorAll('[data-k]').forEach(el=>o[el.dataset.k]=el.value.trim());if(o.id&&o.escenario)arr.push(o)});store.set('sala.tareas',JSON.stringify(arr));return arr}
 renderTaskEditor();
-$('#cCid').value=store.get('sala.cid')||'';
+(()=>{const q=new URLSearchParams(location.search).get('cid');if(q)store.set('sala.cid',q.trim());$('#cCid').value=store.get('sala.cid')||''})();
+function cidEstado(){const i=$('#cCid');i.classList.toggle('vacio',!i.value.trim())}
+cidEstado();
+$('#cCid').addEventListener('input',()=>{store.set('sala.cid',$('#cCid').value.trim());cidEstado();$('#cidMsg').textContent='';if(S&&!S.demo)$('#bApplyCid').style.display=''});
+$('#bCopyCid').onclick=async()=>{const v=$('#cCid').value.trim();if(!v){$('#cidMsg').textContent='vacío';return}
+  try{await navigator.clipboard.writeText(v)}catch(e){const i=$('#cCid');i.select();document.execCommand('copy')}
+  $('#cidMsg').textContent='copiado';setTimeout(()=>$('#cidMsg').textContent='',1500)};
+$('#bApplyCid').onclick=()=>{if(!S||S.demo)return;S.figma=false;mountStage();ev('moderador',{texto:'Prototipo recargado con otro Client ID'});$('#bApplyCid').style.display='none'};
 if(store.get('sala.url'))$('#cUrl').value=store.get('sala.url');
 
 /* ================= estado ================= */
