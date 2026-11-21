@@ -23,7 +23,7 @@ h1,h2,h3{margin:0;color:var(--marca)}
 .cid button{padding:5px 12px;border-radius:999px;border:0;background:#fff;color:var(--marca);font:600 12px inherit;cursor:pointer}
 .cid button.sec{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
 .cid .ok{color:#7be07b;font-weight:600}
-@media (max-width:900px){.top{flex-wrap:wrap}.cid{order:9;width:100%}.cid input{flex:1;width:auto}}
+@media (max-width:900px){.top{flex-wrap:wrap;gap:8px 10px;padding:10px 14px}.top h1{flex:1 1 100%;font-size:15px}.top .sp{display:none}.cid{order:9;width:100%;flex-wrap:wrap;border-radius:16px;padding:8px}.cid input{flex:1 1 160px;width:auto;min-width:0}}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.14);font-size:12px}
 .dot{width:8px;height:8px;border-radius:50%;background:#bbb}.dot.on{background:#7be07b}.dot.off{background:#ff8a8a}.dot.wait{background:#ffd25e}
 .btn{border:0;border-radius:999px;padding:10px 18px;background:var(--marca);color:#fff;font-weight:500}
@@ -43,7 +43,7 @@ textarea{min-height:64px;resize:vertical}
 .tasks .t{display:grid;grid-template-columns:56px 1fr 1fr;gap:8px;margin-bottom:8px}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 /* session */
-.session{display:none;height:calc(100vh - 52px);grid-template-columns:1fr 420px}
+.session{display:none;height:calc(100dvh - var(--topH,52px));grid-template-columns:1fr 420px}
 .session.on{display:grid}
 .stage{position:relative;background:#121019;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .stage iframe{border:0;width:100%;height:100%;background:#121019}
@@ -106,7 +106,8 @@ td[contenteditable]{background:#fffdf7}
 .zonas{font-size:12px;margin-top:8px;line-height:1.7}
 .msgbox{display:flex;gap:8px;margin:12px 0}.msgbox input{flex:1}
 .aviso-fin{background:#e6f4e3;border:1px solid #b5d9ae;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px;display:none}
-@media (max-width:900px){.grid2{grid-template-columns:1fr}.modos{grid-template-columns:1fr}.session.on{grid-template-columns:1fr;grid-template-rows:60vh 1fr}}
+@media (max-width:700px){.tasks .t{grid-template-columns:1fr;padding-bottom:12px;border-bottom:1px dashed var(--linea)}.tasks .t input[data-k=id]{width:80px}.setup,.sum{margin:16px auto;padding:0 12px 48px}.card{padding:16px}.row .btn{flex:1 1 100%}.linkbox{flex-wrap:wrap}.wait b{font-size:20px}th,td{padding:6px}.sum table{display:block;overflow-x:auto}}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}.modos{grid-template-columns:1fr}.tabs{overflow-x:auto}.tabs button{flex:1 0 auto;padding:10px 14px}.panel{border-left:0;border-top:1px solid var(--linea)}.session.on{grid-template-columns:1fr;grid-template-rows:minmax(200px,42%) minmax(0,1fr)}.stage.movil iframe{width:100%;border-radius:0}}
 </style>
 </head>
 <body>
@@ -268,11 +269,12 @@ $('#bApplyCid').onclick=()=>{if(!S||S.demo)return;S.figma=false;mountStage();ev(
 if(store.get('sala.url'))$('#cUrl').value=store.get('sala.url');
 
 /* ================= estado ================= */
+function modoActual(){const i=document.querySelector('input[name=modo]:checked');return i?i.value:'presencial'}
 let S=null;let timer=null;let demoTimer=null;let lastClick=null;let lastActivity=0;let rec=null;let wantVoice=false;
 function newSession(demo){
   const dev=$('#cDev').value;
   S={version:1,demo:!!demo,inicio:Date.now(),dispositivo:dev,
-     remoto:!demo&&(document.querySelector('input[name=modo]:checked')||{}).value||'presencial'==='remota',participante:{alias:$('#pAlias').value.trim()||'P?',perfil:$('#pPerfil').value.trim(),tecnologia:$('#pTec').value,modalidad:(!demo&&(document.querySelector('input[name=modo]:checked')||{}).value||'presencial'==='remota')?'Remota en vivo (link, sin moderación presencial)':$('#pMod').value,fecha:new Date().toLocaleString('es-CL')},
+     remoto:!demo&&modoActual()==='remota',participante:{alias:$('#pAlias').value.trim()||'P?',perfil:$('#pPerfil').value.trim(),tecnologia:$('#pTec').value,modalidad:(!demo&&modoActual()==='remota')?'Remota en vivo (link, sin moderación presencial)':$('#pMod').value,fecha:new Date().toLocaleString('es-CL')},
      tareas:readTasks().map(t=>({...t,inicio:null,fin:null,resultado:null})),
      actual:null,pantalla:null,eventos:[],voz:[],marcas:[],calor:[],figma:false,respaldo:false};
 }
@@ -425,7 +427,7 @@ function begin(demo){
   if(demo)runDemo();
 }
 $('#bStart').onclick=()=>{if(!$('#cCid').value.trim()&&!confirm('Sin Client ID, Figma no enviará avisos. ¿Iniciar igual?'))return;begin(false)};
-function modoUI(){const r=(document.querySelector('input[name=modo]:checked')||{}).value||'presencial'==='remota';$('#bStart').textContent=r?'Crear link para el participante':'Iniciar sesión';
+function modoUI(){const r=modoActual()==='remota';$('#bStart').textContent=r?'Crear link para el participante':'Iniciar sesión';
   $('#modoHelp').textContent=r?'El participante necesita Chrome en computador. Tu pestaña debe quedar abierta durante el test. No se graba video ni audio: solo ves en vivo; se guarda el registro en texto.':'';}
 document.querySelectorAll('input[name=modo]').forEach(i=>i.onchange=modoUI);modoUI();
 $('#bDemo').onclick=()=>begin(true);
@@ -500,6 +502,8 @@ $('#combFiles').onchange=async e=>{
   CALORC=sess.flatMap(s=>(s.calor||[]).map(p=>({...p,quien:s.participante.alias})));heatSelect('#cScr',CALORC,null);dibujarC()};
 $('#dlComb').onclick=()=>download('matriz-consolidada.csv',csv(tableRows('#tComb')),'text/csv;charset=utf-8');
 
+/* ================= alto de la barra (responsivo) ================= */
+(()=>{const t=document.querySelector('.top');const f=()=>document.documentElement.style.setProperty('--topH',t.offsetHeight+'px');f();try{new ResizeObserver(f).observe(t)}catch(e){window.addEventListener('resize',f)}})();
 /* ================= éxito automático (presencial) ================= */
 function exitoLocal(id){if(!S||S.remoto||!S.actual)return;const tk=S.tareas.find(t=>t.id===S.actual);if(!tk||!exitoIds(tk).includes(id))return;tk.fin=now();tk.resultado='Completada';ev('moderador',{texto:tk.id+' · Completada (llegó a '+nombrePantalla(id)+')'});S.actual=null;renderTasks()}
 
