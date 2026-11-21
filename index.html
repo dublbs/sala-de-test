@@ -265,8 +265,8 @@ function renderTaskEditor(){const saved=JSON.parse(store.get('sala.tareas')||'nu
 function readTasks(){const arr=[];document.querySelectorAll('#taskEd .t').forEach(row=>{const o={};row.querySelectorAll('[data-k]').forEach(el=>o[el.dataset.k]=el.value.trim());if(o.id&&o.escenario)arr.push(o)});store.set('sala.tareas',JSON.stringify(arr));return arr}
 renderTaskEditor();
 // Client ID del equipo: se usa siempre por defecto (no es secreto). Cambiarlo aquí si se crea otra app.
-const CID_EQUIPO='';
-(()=>{const q=new URLSearchParams(location.search).get('cid');if(q)store.set('sala.cid',q.trim());$('#cCid').value=store.get('sala.cid')||CID_EQUIPO})();
+const CID_EQUIPO='w6zb5o7oRwVOCN9lbVUZ8E';
+(()=>{const q=new URLSearchParams(location.search).get('cid');if(q)store.set('sala.cid',q.trim());const g=store.get('sala.cid');$('#cCid').value=(g&&g!=='PRUEBA-SIN-ID')?g:CID_EQUIPO})();
 function cidEstado(){const i=$('#cCid');i.classList.toggle('vacio',!i.value.trim())}
 cidEstado();
 $('#cCid').addEventListener('input',()=>{store.set('sala.cid',$('#cCid').value.trim());cidEstado();$('#cidMsg').textContent='';if(S&&!S.demo)$('#bApplyCid').style.display=''});
