@@ -37,7 +37,7 @@ window.Calor = (function () {
     g.fillStyle = '#faf7f2'; g.fillRect(0, 0, W, H);
     g.font = '10px Poppins, system-ui, sans-serif'; g.textBaseline = 'top';
     if (P) {
-      for (const [x, y, ww, hh, n] of P.s) { g.fillStyle = '#ffffff'; g.strokeStyle = '#e6dfd6'; g.lineWidth = 1; g.fillRect(x * k, y * k, ww * k, hh * k); g.strokeRect(x * k + .5, y * k + .5, ww * k - 1, hh * k - 1); if (opt.nombres) { g.fillStyle = '#9a948c'; g.fillText(n, x * k + 4, y * k + 3) } }
+      for (const [x, y, ww, hh, n] of P.s) { g.fillStyle = '#efe9e1'; g.strokeStyle = '#d9d0c4'; g.lineWidth = 1; g.fillRect(x * k, y * k, ww * k, hh * k); g.strokeRect(x * k + .5, y * k + .5, ww * k - 1, hh * k - 1); if (opt.nombres) { g.fillStyle = '#6f6860'; g.font = (W > 700 ? '600 13px' : '600 10px') + ' Poppins, system-ui, sans-serif'; g.fillText(n, x * k + 6, y * k + 4) } }
     }
     const pts = puntos.filter(p => p.s === screenId && (!opt.soloFallidos || !p.ok) && (!opt.tarea || p.tarea === opt.tarea));
     const xy = pts.map(p => ({ p, q: pos(p, opt.sumarScroll) })).filter(o => o.q);
@@ -48,7 +48,7 @@ window.Calor = (function () {
       for (const [x, y, ww, hh, n] of P.k) {
         const c = xy.filter(o => o.q.x >= x && o.q.x <= x + ww && o.q.y >= y && o.q.y <= y + hh).length;
         hits.push({ n, c });
-        g.strokeStyle = c ? 'rgba(61,55,106,.9)' : 'rgba(61,55,106,.35)'; g.lineWidth = 1; g.strokeRect(x * k + .5, y * k + .5, Math.max(2, ww * k - 1), Math.max(2, hh * k - 1));
+        g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(x * k, y * k, Math.max(2, ww * k), Math.max(2, hh * k)); g.strokeStyle = c ? 'rgba(61,55,106,.9)' : 'rgba(61,55,106,.45)'; g.lineWidth = 1; g.strokeRect(x * k + .5, y * k + .5, Math.max(2, ww * k - 1), Math.max(2, hh * k - 1));
       }
       g.setLineDash([]);
     }

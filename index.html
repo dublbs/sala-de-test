@@ -110,6 +110,11 @@ td[contenteditable]{background:#fffdf7}
 .hstats{font-size:12px;color:var(--suave);margin-bottom:8px}
 .hwrap{border:1px solid var(--linea);border-radius:10px;overflow:auto;max-height:70vh;background:#faf7f2}
 .hwrap canvas{display:block}
+.heatbig{position:fixed;inset:0;z-index:50;background:#16131f;display:flex;flex-direction:column;padding:16px}
+.heatbig[hidden]{display:none}
+.hbhead{display:flex;align-items:center;gap:12px;color:#fff;padding:0 4px 12px;flex-wrap:wrap}.hbhead .sp{flex:1}.hbhead .hstats{color:#cfcbe0}
+.hbbody{flex:1;overflow:auto;border-radius:12px;background:#faf7f2;display:flex;justify-content:center}
+.hbbody canvas{display:block}
 .zonas{font-size:12px;margin-top:8px;line-height:1.7}
 .msgbox{display:flex;gap:8px;margin:12px 0}.msgbox input{flex:1}
 .aviso-fin{background:#e6f4e3;border:1px solid #b5d9ae;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px;display:none}
@@ -186,7 +191,7 @@ td[contenteditable]{background:#fffdf7}
     </div>
     <div class="pane" id="pCalor">
       <div class="calorbar"><select id="hScr"></select><label class="chk"><input type="checkbox" id="hFollow" checked>Seguir pantalla actual</label><label class="chk"><input type="checkbox" id="hFail">Solo sin respuesta</label><label class="chk" title="Ajuste: si los puntos aparecen corridos hacia abajo en páginas largas, desactívalo"><input type="checkbox" id="hScroll" checked>Sumar scroll</label></div>
-      <div class="hstats" id="hStats"></div><div class="hwrap"><canvas id="hCanvas"></canvas></div><div class="zonas" id="hZonas"></div>
+      <div class="hstats" id="hStats"></div><button class="btn sec" id="bHeatBig" style="margin-bottom:8px;padding:6px 14px;font-size:12px">Ver grande ⤢</button><div class="hwrap" id="hWrap"><canvas id="hCanvas"></canvas></div><div class="zonas" id="hZonas"></div>
     </div>
     <div class="pane" id="pLog"><div class="log" id="log"></div></div>
     <div class="pane" id="pVoz"><div class="interim" id="interim"></div><div class="log" id="vozLog"></div></div>
@@ -222,6 +227,7 @@ td[contenteditable]{background:#fffdf7}
   <div class="card"><h3>Mapa de calor de todas las sesiones</h3><div class="calorbar"><select id="cScr" style="flex:1 1 280px"></select><label class="chk"><input type="checkbox" id="cFail">Solo sin respuesta</label><label class="chk"><input type="checkbox" id="cScroll" checked>Sumar scroll</label><button class="btn sec" id="dlCalorC">Descargar imagen (.png)</button></div><div class="hstats" id="cStats"></div><div class="hwrap" style="max-height:none"><canvas id="cCanvas"></canvas></div><div class="zonas" id="cZonas"></div></div>
 </div></section>
 
+<div id="heatBig" class="heatbig" hidden><div class="hbhead"><b id="hbTitle">Mapa de calor</b><span class="sp"></span><span id="hbStats" class="hstats" style="margin:0"></span><button class="btn light" id="bHeatClose">Cerrar ✕</button></div><div class="hbbody" id="hbBody"><canvas id="hbCanvas"></canvas></div></div>
 <script src="mapa.js"></script>
 <script src="pantallas.js"></script>
 <script src="calor.js"></script>
@@ -530,12 +536,21 @@ function heatSelect(sel,pts,pref){const m=window.Calor?Calor.pantallasCon(pts):{
   const cur=$(sel).value;$(sel).innerHTML=ids.length?ids.map(id=>`<option value="${id}">${esc(nombrePantalla(id))} · ${m[id]||0} clics</option>`).join(''):'<option value="">Aún no hay clics</option>';
   if(ids.includes(cur))$(sel).value=cur;else if(pref&&ids.includes(pref))$(sel).value=pref}
 function zonasTxt(r){if(!r)return '';const z=r.zonas.slice(0,8).map(z=>`${esc(z.n)} (${z.c})`).join(' · ');return (z?'<b>Zonas más clicadas:</b> '+z:'')+(r.sinPos?`<br>${r.sinPos} clic(s) sin posición (Figma no la envió).`:'')+(r.fuera?`<br>${r.fuera} clic(s) quedaron fuera del esquema: prueba el ajuste "Sumar scroll".`:'')}
-function statsTxt(r){return r?`${r.total} clics · ${r.fallidos} sin respuesta (aros rojos) · el número sobre cada zona es la cantidad de clics que recibió.`:''}
-let heatT=0;
-function renderHeat(force){if(!S||!window.Calor)return;if(!$('#pCalor').classList.contains('on'))return;const t=Date.now();if(!force&&t-heatT<300){clearTimeout(renderHeat._t);renderHeat._t=setTimeout(()=>renderHeat(true),320);return}heatT=t;
-  heatSelect('#hScr',S.calor,S.pantalla);if($('#hFollow').checked&&S.pantalla&&[...$('#hScr').options].some(o=>o.value===S.pantalla))$('#hScr').value=S.pantalla;
+function statsTxt(r){if(r&&!r.total)return 'Esta pantalla aún no tiene clics. Elige otra en la lista.';return r?`${r.total} clics · ${r.fallidos} sin respuesta (aros rojos) · el número sobre cada zona es la cantidad de clics que recibió.`:''}
+let heatT=0;heatT={valueOf(){return this.v||0},v:0};
+function renderHeat(force){if(!S||!window.Calor)return;if(!$('#pCalor').classList.contains('on'))return;const t=Date.now();if(!force&&t-heatT.v<300){clearTimeout(renderHeat._t);renderHeat._t=setTimeout(()=>renderHeat(true),320);return}heatT.v=t;
+  const cnt=Calor.pantallasCon(S.calor);
+  if($('#hFollow').checked){const ult=S.calor.length?S.calor[S.calor.length-1].s:null;heatT._sel=(S.pantalla&&cnt[S.pantalla])?S.pantalla:(ult||S.pantalla)}
+  heatSelect('#hScr',S.calor,null);if(heatT._sel&&[...$('#hScr').options].some(o=>o.value===heatT._sel))$('#hScr').value=heatT._sel;
   const id=$('#hScr').value;if(!id){$('#hStats').textContent='Los clics aparecen aquí apenas el participante empieza a usar el prototipo.';return}
-  const r=Calor.render($('#hCanvas'),id,S.calor,{ancho:$('#pCalor').clientWidth-34,soloFallidos:$('#hFail').checked,sumarScroll:$('#hScroll').checked});$('#hStats').textContent=statsTxt(r)+' En total: '+S.calor.length+' clics en '+Object.keys(Calor.pantallasCon(S.calor)).length+' pantalla(s).';$('#hZonas').innerHTML=zonasTxt(r)}
+  const r=Calor.render($('#hCanvas'),id,S.calor,{ancho:$('#pCalor').clientWidth-34,soloFallidos:$('#hFail').checked,sumarScroll:$('#hScroll').checked});$('#hStats').textContent=statsTxt(r)+' En total: '+S.calor.length+' clics en '+Object.keys(Calor.pantallasCon(S.calor)).length+' pantalla(s).';$('#hZonas').innerHTML=zonasTxt(r);
+  // baja hasta el último clic de esta pantalla
+  const P=(window.PANTALLAS||{})[id];const last=[...S.calor].reverse().find(p=>p.s===id);if(P&&last){const q=Calor.pos(last,$('#hScroll').checked);if(q){const k=$('#hCanvas').clientWidth/P.w;const w=$('#hWrap');w.scrollTop=Math.max(0,q.y*k-w.clientHeight/2)}}
+  if(!$('#heatBig').hidden)renderBig()}
+function renderBig(){const id=$('#hScr').value;if(!id)return;$('#hbTitle').textContent='Mapa de calor · '+nombrePantalla(id);const P=(window.PANTALLAS||{})[id];const body=$('#hbBody');const ancho=Math.min(body.clientWidth-24,P&&P.w<800?520:1200);
+  const r=Calor.render($('#hbCanvas'),id,S.calor,{ancho,soloFallidos:$('#hFail').checked,sumarScroll:$('#hScroll').checked});$('#hbStats').textContent=statsTxt(r)}
+$('#bHeatBig').onclick=()=>{$('#heatBig').hidden=false;renderBig()};$('#bHeatClose').onclick=()=>{$('#heatBig').hidden=true};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#heatBig').hidden)$('#heatBig').hidden=true});
 ['#hScr','#hFail','#hScroll'].forEach(s=>$(s).addEventListener('change',()=>{if(s==='#hScr')$('#hFollow').checked=false;renderHeat(true)}));$('#hFollow').onchange=()=>renderHeat(true);
 function dibujarS(){if(!window.Calor||!S)return;const id=$('#sScr').value;if(!id){$('#sStats').textContent='Esta sesión no tiene clics con posición.';return}const r=Calor.render($('#sCanvas'),id,S.calor,{ancho:Math.min(1000,$('#sCanvas').parentElement.clientWidth||900),soloFallidos:$('#sFail').checked,sumarScroll:$('#sScroll').checked});$('#sStats').textContent=statsTxt(r);$('#sZonas').innerHTML=zonasTxt(r)}
 ['#sScr','#sFail','#sScroll'].forEach(s=>$(s).addEventListener('change',dibujarS));
