@@ -61,6 +61,8 @@ textarea{min-height:64px;resize:vertical}
 .log{font-family:ui-monospace,Menlo,monospace;font-size:12px}
 .log div{padding:4px 0;border-bottom:1px dashed var(--linea);display:grid;grid-template-columns:56px 1fr;gap:8px}
 .log .t{color:var(--suave)}.log .miss{color:var(--err);font-weight:600}.log .scr{color:var(--marca);font-weight:600}.log .voz{color:#205c7a}.log .mod{color:var(--warn);font-weight:600}
+.vu{display:inline-block;width:36px;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden;vertical-align:middle;margin-left:6px}.vu i{display:block;height:100%;width:0;background:#7be07b;transition:width .08s}
+.micst{font-size:13px;margin-top:6px}.micst.err{color:#c0392b}.micst.ok{color:#2e7d32}
 .interim{color:var(--suave);font-style:italic;min-height:20px;margin:8px 0}
 .footer{border-top:1px solid var(--linea);padding:12px 16px;display:flex;gap:8px;justify-content:space-between}
 /* summary */
@@ -80,7 +82,7 @@ td[contenteditable]{background:#fffdf7}
   <h1>Sala de test · Enoturismo Chile</h1>
   <span class="pill"><span class="dot" id="dFig"></span>Figma</span>
   <span class="pill"><span class="dot" id="dBak"></span>Respaldo</span>
-  <span class="pill"><span class="dot" id="dVoz"></span>Voz</span>
+  <span class="pill"><span class="dot" id="dVoz"></span><span id="lVoz">Voz</span><span class="vu"><i id="vu"></i></span></span>
   <span class="sp"></span>
   <span class="pill" id="clock">00:00</span>
 </div>
@@ -95,7 +97,7 @@ td[contenteditable]{background:#fffdf7}
     <div><label>Link del prototipo (Figma)</label><input type="text" id="cUrl" value="https://www.figma.com/proto/JvIrZGRXpBwJmZrdSsB0Gf/enoturismo-landing"><p class="help">Desde Figma: Compartir prototipo → Copiar link.</p></div>
     <div><label>Client ID (app de Figma)</label><input type="text" id="cCid" placeholder="ej. 6rtt685EC…"><p class="help">Se guarda solo en este navegador. Sin él, Figma no envía los avisos (usa el modo demostración para probar).</p></div>
     <div><label>Dispositivo</label><select id="cDev"><option value="escritorio">Escritorio (1920)</option><option value="movil">Móvil (390)</option></select></div>
-    <div><label>Transcripción de voz</label><select id="cVoz"><option value="es-CL">Activada · español (Chile)</option><option value="es-ES">Activada · español (España)</option><option value="">Desactivada</option></select><p class="help">Usa el reconocimiento de voz de Chrome (servidores de Google). No se guarda audio, solo texto. Inclúyelo en el consentimiento.</p></div>
+    <div><label>Transcripción de voz</label><select id="cVoz"><option value="es-CL">Activada · español (Chile)</option><option value="es-ES">Activada · español (España)</option><option value="">Desactivada</option></select><p class="help">Usa el reconocimiento de voz de Chrome (servidores de Google). No se guarda audio, solo texto. Inclúyelo en el consentimiento.</p><button type="button" class="btn sec" id="bMicTest" style="margin-top:8px">Probar micrófono y transcripción</button><div class="micst" id="micSt"></div></div>
   </div>
   <div class="card">
     <h3 style="margin-bottom:12px">Participante</h3>
@@ -262,23 +264,60 @@ function onRespaldo(d){
 window.addEventListener('message',e=>{
   const d=e.data;if(!d||typeof d!=='object')return;
   if(d.source==='sala-respaldo'&&/figma\.com$/.test(new URL(e.origin).hostname))return onRespaldo(d);
-  if(e.origin==='https://www.figma.com'&&d.type)return onFigma(d.type,d.data||{});
+  if((e.origin==='https://www.figma.com'||e.origin==='https://embed.figma.com')&&d.type)return onFigma(d.type,d.data||{});
 });
 function updateNow(){$('#now').innerHTML='Pantalla actual: <b>'+esc(nombrePantalla(S.pantalla))+'</b>'}
 
 /* ================= voz ================= */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-function startVoice(lang){
-  if(!lang){dot('#dVoz','');return}
-  if(!SR){dot('#dVoz','off');ev('sistema',{texto:'Este navegador no permite transcribir voz (usa Chrome)'});return}
-  wantVoice=true;rec=new SR();rec.lang=lang;rec.continuous=true;rec.interimResults=true;
-  rec.onresult=r=>{let interim='';for(let i=r.resultIndex;i<r.results.length;i++){const x=r.results[i];if(x.isFinal){const txt=x[0].transcript.trim();if(txt){S.voz.push({t:now(),texto:txt,tarea:S.actual,pantalla:S.pantalla});ev('voz',{texto:txt})}}else interim+=x[0].transcript}$('#interim').textContent=interim};
-  rec.onstart=()=>dot('#dVoz','on');
-  rec.onerror=e=>{dot('#dVoz','off');if(e.error==='not-allowed'){wantVoice=false;ev('sistema',{texto:'Micrófono bloqueado: permite el micrófono para transcribir'})}};
-  rec.onend=()=>{if(wantVoice&&S){try{rec.start()}catch(e){}}else dot('#dVoz','')};
-  try{rec.start()}catch(e){}
+const BRANDS=((navigator.userAgentData&&navigator.userAgentData.brands)||[]).map(b=>b.brand).join(' ');
+const NAV_OK=/Google Chrome|Microsoft Edge/.test(BRANDS)||(!navigator.userAgentData&&/Chrome\//.test(navigator.userAgent)&&!/Electron|Claude\//.test(navigator.userAgent));
+const VOZ_ERR={
+  'not-allowed':'Micrófono bloqueado. Permítelo en el candado de la barra de direcciones y recarga.',
+  'service-not-allowed':'Este navegador no deja usar el reconocimiento de voz. Abre la sala en Google Chrome.',
+  'audio-capture':'No se encontró micrófono. Revisa que esté conectado y elegido en la configuración del sistema.',
+  'network':'El reconocimiento de voz no responde. Pasa en navegadores que no son Google Chrome (por ejemplo el navegador de Claude o Brave) o sin internet.',
+  'language-not-supported':'Idioma no disponible. Prueba con español (España).'
+};
+let vozFallas=0,vozMsg='',micStream=null,vuRaf=0;
+function vozEstado(st,msg){dot('#dVoz',st);$('#lVoz').textContent=st==='off'?'Voz · error':'Voz';$('#dVoz').parentElement.title=msg||'';
+  if(msg&&msg!==vozMsg&&S){vozMsg=msg;ev('sistema',{texto:'Voz: '+msg})}}
+async function startMeter(){
+  try{micStream=await navigator.mediaDevices.getUserMedia({audio:true});}catch(e){return e.name==='NotAllowedError'?'not-allowed':'audio-capture'}
+  try{const ctx=new (window.AudioContext||window.webkitAudioContext)();const an=ctx.createAnalyser();an.fftSize=512;ctx.createMediaStreamSource(micStream).connect(an);const buf=new Uint8Array(an.fftSize);
+    const loop=()=>{an.getByteTimeDomainData(buf);let m=0;for(const v of buf)m=Math.max(m,Math.abs(v-128));$('#vu').style.width=Math.min(100,m*1.6)+'%';vuRaf=requestAnimationFrame(loop)};loop();micStream._ctx=ctx}catch(e){}
+  return null}
+function stopMeter(){cancelAnimationFrame(vuRaf);$('#vu').style.width='0';if(micStream){micStream.getTracks().forEach(t=>t.stop());try{micStream._ctx.close()}catch(e){}micStream=null}}
+async function startVoice(lang){
+  vozFallas=0;vozMsg='';
+  if(!lang){vozEstado('');return}
+  const mErr=await startMeter();
+  if(mErr){vozEstado('off',VOZ_ERR[mErr]);return}
+  if(!SR){vozEstado('off','Este navegador no transcribe voz. Abre la sala en Google Chrome.');return}
+  if(!NAV_OK)vozEstado('wait','Este navegador puede no transcribir. Si no aparece texto, abre la sala en Google Chrome.');
+  wantVoice=true;let lastStart=0;
+  const arrancar=()=>{if(!wantVoice||!S)return;rec=new SR();rec.lang=lang;rec.continuous=true;rec.interimResults=true;
+    rec.onresult=r=>{vozFallas=0;let interim='';for(let i=r.resultIndex;i<r.results.length;i++){const x=r.results[i];if(x.isFinal){const txt=x[0].transcript.trim();if(txt&&S){S.voz.push({t:now(),texto:txt,tarea:S.actual,pantalla:S.pantalla});ev('voz',{texto:txt})}}else interim+=x[0].transcript}$('#interim').textContent=interim;if($('#dVoz').className!=='dot on')vozEstado('on')};
+    rec.onstart=()=>{lastStart=Date.now();if(NAV_OK||vozFallas===0)vozEstado(NAV_OK?'on':'wait')};
+    rec.onerror=e=>{if(e.error==='no-speech'||e.error==='aborted')return;vozFallas++;
+      if(['not-allowed','service-not-allowed','audio-capture','language-not-supported'].includes(e.error)){wantVoice=false;vozEstado('off',VOZ_ERR[e.error]);return}
+      if(vozFallas>=3){wantVoice=false;vozEstado('off',VOZ_ERR[e.error]||('Error de voz: '+e.error))}};
+    rec.onend=()=>{$('#interim').textContent='';if(wantVoice&&S){const wait=Date.now()-lastStart<1500?Math.min(8000,500*2**vozFallas):150;setTimeout(arrancar,wait)}else if($('#dVoz').className!=='dot off')vozEstado('')};
+    try{rec.start()}catch(e){setTimeout(arrancar,1000)}};
+  arrancar();
 }
-function stopVoice(){wantVoice=false;try{rec&&rec.stop()}catch(e){}}
+function stopVoice(){wantVoice=false;try{rec&&rec.stop()}catch(e){}stopMeter()}
+// Prueba previa (antes de iniciar la sesión)
+$('#bMicTest').onclick=async()=>{const st=$('#micSt');const lang=$('#cVoz').value||'es-CL';st.className='micst';st.textContent='Pidiendo el micrófono…';
+  let ms;try{ms=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){st.className='micst err';st.textContent=VOZ_ERR[e.name==='NotAllowedError'?'not-allowed':'audio-capture'];return}
+  if(!SR){ms.getTracks().forEach(t=>t.stop());st.className='micst err';st.textContent='Micrófono OK, pero este navegador no transcribe. Abre la sala en Google Chrome.';return}
+  st.textContent='Micrófono OK. Di algo en voz alta (por ejemplo "hola, estoy probando")…';
+  const r=new SR();r.lang=lang;r.interimResults=true;let ok=false;
+  const fin=(cls,txt)=>{clearTimeout(to);try{r.abort()}catch(e){}ms.getTracks().forEach(t=>t.stop());st.className='micst '+cls;st.textContent=txt};
+  const to=setTimeout(()=>fin('err',ok?'':'No llegó texto en 10 s. Revisa que el micrófono correcto esté elegido'+(NAV_OK?'.':' y abre la sala en Google Chrome.')),10000);
+  r.onresult=e=>{ok=true;const t=[...e.results].map(x=>x[0].transcript).join(' ');if(e.results[e.results.length-1].isFinal)fin('ok','Funciona. Entendí: “'+t+'”');else st.textContent='Escuchando: “'+t+'”'};
+  r.onerror=e=>{if(e.error!=='no-speech'&&e.error!=='aborted')fin('err',VOZ_ERR[e.error]||('Error: '+e.error))};
+  try{r.start()}catch(e){fin('err','No se pudo iniciar: '+e.message)}};
 const vozCerca=(t,antes,despues)=>S.voz.filter(v=>v.t>=t-antes&&v.t<=t+despues).map(v=>v.texto).join(' ');
 
 /* ================= tareas en sesión ================= */
@@ -303,7 +342,7 @@ $('#taskList').addEventListener('click',e=>{const b=e.target.closest('button[dat
   renderTasks()});
 $('#bMark').onclick=()=>{if(!S)return;const t=now();const nota=$('#markTxt').value.trim();const m={t,nota,pantalla:S.pantalla,tarea:S.actual,voz:vozCerca(t,15000,3000)};S.marcas.push(m);ev('moderador',{texto:'Fricción marcada'+(nota?': '+nota:'')});$('#markTxt').value=''};
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('#'+b.dataset.p).classList.add('on')});
-$('#bRestart').onclick=()=>{const f=$('#fig');if(f)f.contentWindow.postMessage({type:'RESTART'},'https://www.figma.com');ev('moderador',{texto:'Prototipo reiniciado'})};
+$('#bRestart').onclick=()=>{const f=$('#fig');if(f)f.contentWindow.postMessage({type:'RESTART'},new URL(f.src).origin);ev('moderador',{texto:'Prototipo reiniciado'})};
 
 /* ================= iniciar / terminar ================= */
 function begin(demo){
