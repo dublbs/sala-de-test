@@ -32,6 +32,7 @@ button{font:inherit;cursor:pointer}
 #escena.on{display:block}
 #escena iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#121019}
 #escena.movil iframe{left:50%;top:50%;width:430px;height:min(932px,100vh);transform:translate(-50%,-50%);border-radius:24px}
+@media (max-width:500px){#escena.movil iframe{left:0;top:0;width:100%;height:100%;transform:none;border-radius:0}}
 .barra{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:12px;background:#fff;border-radius:999px;padding:8px 8px 8px 18px;box-shadow:0 10px 30px rgba(0,0,0,.35);max-width:calc(100vw - 24px)}
 .barra .btn,.barra .lnk{flex:0 0 auto}
 @media (max-width:600px){.barra{left:8px;right:8px;transform:none;border-radius:16px;flex-wrap:wrap;padding:10px}.barra .t{flex:1 1 100%;max-width:none;white-space:normal}.tarjeta{padding:22px}}
@@ -98,6 +99,8 @@ const $=s=>document.querySelector(s);
 const show=(id,on)=>$(id).classList.toggle('off',!on);
 function b64d(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return decodeURIComponent(escape(atob(s)))}
 let CFG=null;try{const m=location.hash.match(/c=([^&]+)/);CFG=JSON.parse(b64d(m[1]))}catch(e){}
+// versión del prototipo según la pantalla: celular o ventana angosta → móvil (390); si no → escritorio (1920)
+if(CFG&&(!CFG.dev||CFG.dev==='auto')){CFG.dev=(window.innerWidth<768||/Android|iPhone|iPad/i.test(navigator.userAgent))?'movil':'escritorio';if(CFG.inicioM&&CFG.inicioE)CFG.inicio=CFG.dev==='movil'?CFG.inicioM:CFG.inicioE}
 if(!CFG||!CFG.peer||!CFG.tareas){show('#cBien',false);show('#cErr',true)}
 else{const n=CFG.tareas.length;$('#nT').textContent=n===1?'una':n;$('#nT').nextSibling.textContent=n===1?' tarea corta. No hay respuestas correctas: estamos probando el diseño, no a ti.':' tareas cortas. No hay respuestas correctas: estamos probando el diseño, no a ti.'}
 
@@ -113,7 +116,7 @@ function conectar(){return new Promise((res,rej)=>{
   peer=new Peer({debug:1});
   const to=setTimeout(()=>rej(new Error('tiempo')),15000);
   peer.on('open',()=>{conn=peer.connect(CFG.peer,{reliable:true});
-    conn.on('open',()=>{clearTimeout(to);listo=true;enviar({k:'hola',nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')});while(cola.length)conn.send(cola.shift());res()});
+    conn.on('open',()=>{clearTimeout(to);listo=true;enviar({k:'hola',dev:CFG.dev,nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')});while(cola.length)conn.send(cola.shift());res()});
     conn.on('data',onMod);conn.on('close',()=>{listo=false;toast('<b>Se perdió la conexión con quien modera.</b> Puedes seguir; intentaremos reconectar.');setTimeout(reconectar,3000)})});
   peer.on('error',e=>{if(e.type==='peer-unavailable'){clearTimeout(to);rej(new Error('nomod'))}else if(!listo){clearTimeout(to);rej(e)}});
 })}

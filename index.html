@@ -134,7 +134,7 @@ td[contenteditable]{background:#fffdf7}
   <div class="card grid2">
     <div><label>Link del prototipo (Figma)</label><input type="text" id="cUrl" value="https://www.figma.com/proto/JvIrZGRXpBwJmZrdSsB0Gf/enoturismo-landing"><p class="help">Desde Figma: Compartir prototipo → Copiar link.</p></div>
     <div><label>Client ID (app de Figma)</label><p class="help">Está siempre arriba, en la barra morada: puedes editarlo y copiarlo en cualquier momento. Se guarda solo en este navegador. Sin él, Figma no envía los avisos (usa el modo demostración para probar).</p></div>
-    <div><label>Dispositivo</label><select id="cDev"><option value="escritorio">Escritorio (1920)</option><option value="movil">Móvil (390)</option></select></div>
+    <div><label>Dispositivo</label><select id="cDev"><option value="auto" selected>Automático: según la pantalla</option><option value="escritorio">Escritorio (1920)</option><option value="movil">Móvil (390)</option></select></div>
     <div><label>Transcripción de voz</label><select id="cVoz"><option value="es-CL">Activada · español (Chile)</option><option value="es-ES">Activada · español (España)</option><option value="">Desactivada</option></select><p class="help">Usa el reconocimiento de voz de Chrome (servidores de Google). No se guarda audio, solo texto. Inclúyelo en el consentimiento.</p><button type="button" class="btn sec" id="bMicTest" style="margin-top:8px">Probar micrófono y transcripción</button><div class="micst" id="micSt"></div></div>
   </div>
   <div class="card">
@@ -272,7 +272,7 @@ if(store.get('sala.url'))$('#cUrl').value=store.get('sala.url');
 function modoActual(){const i=document.querySelector('input[name=modo]:checked');return i?i.value:'presencial'}
 let S=null;let timer=null;let demoTimer=null;let lastClick=null;let lastActivity=0;let rec=null;let wantVoice=false;
 function newSession(demo){
-  const dev=$('#cDev').value;
+  let dev=$('#cDev').value;if(dev==='auto'&&!(!demo&&modoActual()==='remota'))dev=(window.innerWidth<768||/Android|iPhone|iPad/i.test(navigator.userAgent))?'movil':'escritorio';
   S={version:1,demo:!!demo,inicio:Date.now(),dispositivo:dev,
      remoto:!demo&&modoActual()==='remota',participante:{alias:$('#pAlias').value.trim()||'P?',perfil:$('#pPerfil').value.trim(),tecnologia:$('#pTec').value,modalidad:(!demo&&modoActual()==='remota')?'Remota en vivo (link, sin moderación presencial)':$('#pMod').value,fecha:new Date().toLocaleString('es-CL')},
      tareas:readTasks().map(t=>({...t,inicio:null,fin:null,resultado:null})),
@@ -531,7 +531,7 @@ $('#dlCalorC').onclick=()=>pngDe($('#cCanvas'),`calor-consolidado-${(nombrePanta
 /* ================= modalidad remota (link) ================= */
 let peer=null,conn=null,llamada=null;
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-function linkParticipante(){const cfg={v:1,peer:S.peerId,url:$('#cUrl').value.trim(),cid:$('#cCid').value.trim(),dev:S.dispositivo,voz:$('#cVoz').value,inicio:S.dispositivo==='movil'?M.inicio.movil:M.inicio.escritorio,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,exito:exitoIds(t)}))};
+function linkParticipante(){const cfg={v:1,peer:S.peerId,url:$('#cUrl').value.trim(),cid:$('#cCid').value.trim(),dev:S.dispositivo,inicioM:M.inicio.movil,inicioE:M.inicio.escritorio,voz:$('#cVoz').value,inicio:S.dispositivo==='movil'?M.inicio.movil:M.inicio.escritorio,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,exito:exitoIds(t)}))};
   return new URL('participante.html',location.href).href+'#c='+b64e(JSON.stringify(cfg))}
 function montarRemoto(st){st.innerHTML=`<div class="remote"><video id="rv" autoplay playsinline></video>
   <div class="wait" id="rwait"><b id="rwT">Preparando la conexión…</b><p id="rwP">Un momento.</p>
@@ -560,7 +560,7 @@ function iniciarPeer(){
 function cerrarPeer(){try{llamada&&llamada.close()}catch(e){}try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}peer=conn=llamada=null}
 function enviar(m){if(conn&&conn.open)try{conn.send(m)}catch(e){}}
 function onRemoto(m){if(!S||!m||typeof m!=='object')return;
-  if(m.k==='hola'){ev('sistema',{texto:'Navegador del participante: '+(m.nav||'?')});return}
+  if(m.k==='hola'){if(m.dev){S.dispositivo=m.dev}ev('sistema',{texto:'Navegador del participante: '+(m.nav||'?')+(m.dev?' · ve la versión '+(m.dev==='movil'?'móvil (390)':'escritorio (1920)'):'')});return}
   if(m.k==='figma'){onFigma(m.type,m.data||{});return}
   if(m.k==='voz'){if(m.texto){S.voz.push({t:now(),texto:m.texto,tarea:S.actual,pantalla:S.pantalla});ev('voz',{texto:m.texto})}return}
   if(m.k==='interim'){$('#interim').textContent=m.texto||'';return}
