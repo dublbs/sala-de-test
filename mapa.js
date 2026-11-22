@@ -14,7 +14,7 @@ window.MAPA = {
     "685:5848":"Móvil · Explorar · Packs","685:5849":"Móvil · Valle","685:5850":"Móvil · Reserva","685:5884":"Móvil · Detalle del pack",
     "685:5906":"Móvil · Vendimias por zona","685:5929":"Móvil · Súmate a la red","685:5953":"Móvil · Solicitud enviada",
     "685:5965":"Móvil · Ficha de la fiesta","685:5985":"Móvil · Te llevamos a Enoticket","685:6012":"Móvil · Elige un valle",
-    "686:6004":"Móvil · Menú","686:6011":"Móvil · Filtrar","706:9549":"Móvil · Aviso · Reserva enviada",
+    "686:6004":"Móvil · Menú","770:23290":"Móvil · Menú (desde otras páginas)","686:6011":"Móvil · Filtrar","706:9549":"Móvil · Aviso · Reserva enviada",
     "706:9561":"Móvil · Aviso · Solicitud enviada","709:7304":"Móvil · Aviso · No incluido","709:9321":"Móvil · Reserva · procesando",
     "709:9373":"Móvil · Aviso · Faltan datos",
     "724:7386":"Contacto",
@@ -27,7 +27,7 @@ window.MAPA = {
     "725:7704":"Móvil · Términos y condiciones",
     "723:7391":"Móvil · Aviso · Mensaje enviado",
     "723:7400":"Móvil · Aviso · Faltan datos (contacto)",
-    "734:9133":"Tablet · Landing","734:9364":"Tablet · Explorar · Experiencias","734:9522":"Tablet · Explorar · Agenda","734:9820":"Tablet · Explorar · Packs","734:9901":"Tablet · Valle","734:9943":"Tablet · Contacto","734:10005":"Tablet · Preguntas frecuentes","734:10068":"Tablet · Términos y condiciones","734:10133":"Tablet · Reserva","734:10149":"Tablet · Reserva · procesando","734:10165":"Tablet · Te llevamos a Enoticket","734:10178":"Tablet · Detalle del pack","734:10190":"Tablet · Vendimias por zona","734:10211":"Tablet · Súmate a la red","734:10224":"Tablet · Solicitud enviada","734:10234":"Tablet · Ficha de la fiesta","734:10250":"Tablet · Elige un valle","734:10257":"Tablet · Menú","734:10277":"Tablet · Filtrar","734:10286":"Tablet · Aviso · Reserva enviada","734:10295":"Tablet · Aviso · Solicitud enviada","734:10304":"Tablet · Aviso · Faltan datos","734:10313":"Tablet · Aviso · Mensaje enviado","734:10322":"Tablet · Aviso · Faltan datos (contacto)"
+    "734:9133":"Tablet · Landing","734:9364":"Tablet · Explorar · Experiencias","734:9522":"Tablet · Explorar · Agenda","734:9820":"Tablet · Explorar · Packs","734:9901":"Tablet · Valle","734:9943":"Tablet · Contacto","734:10005":"Tablet · Preguntas frecuentes","734:10068":"Tablet · Términos y condiciones","734:10133":"Tablet · Reserva","734:10149":"Tablet · Reserva · procesando","734:10165":"Tablet · Te llevamos a Enoticket","734:10178":"Tablet · Detalle del pack","734:10190":"Tablet · Vendimias por zona","734:10211":"Tablet · Súmate a la red","734:10224":"Tablet · Solicitud enviada","734:10234":"Tablet · Ficha de la fiesta","734:10250":"Tablet · Elige un valle","734:10257":"Tablet · Menú","770:23325":"Tablet · Menú (desde otras páginas)","734:10277":"Tablet · Filtrar","734:10286":"Tablet · Aviso · Reserva enviada","734:10295":"Tablet · Aviso · Solicitud enviada","734:10304":"Tablet · Aviso · Faltan datos","734:10313":"Tablet · Aviso · Mensaje enviado","734:10322":"Tablet · Aviso · Faltan datos (contacto)"
   },
   // Reglas por último segmento (sirven en todas las pantallas donde se repite el componente)
   R: {
