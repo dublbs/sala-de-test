@@ -356,7 +356,7 @@ function embedUrl(){
   const m=u.pathname.match(/\/proto\/([^/]+)\/?([^/]*)/);if(!m)return null;
   const start=(M.inicio[S.dispositivo]||M.inicio.escritorio)||u.searchParams.get('starting-point-node-id')||u.searchParams.get('node-id');
   const nid=String(start).replace(':','-');
-  const q=new URLSearchParams({'node-id':nid,'starting-point-node-id':String(start).replace('-',':'),'embed-host':'sala-de-test','client-id':cid,'scaling':S.dispositivo==='movil'?'scale-down':'scale-down-width','content-scaling':'fixed','hide-ui':'1'});
+  const q=new URLSearchParams({'node-id':nid,'starting-point-node-id':String(start).replace('-',':'),'embed-host':'sala-de-test','client-id':cid,'scaling':'scale-down-width','content-scaling':'fixed','hide-ui':'1'});
   return `https://embed.figma.com/proto/${m[1]}/${m[2]||'prototipo'}?${q}`;
 }
 function mountStage(){

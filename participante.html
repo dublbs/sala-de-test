@@ -187,7 +187,7 @@ function apagar(){vozOn=false;try{rec&&rec.stop()}catch(e){}if(stream)stream.get
 /* ---------- prototipo ---------- */
 function embedUrl(){let u;try{u=new URL(CFG.url)}catch(e){return null}const m=u.pathname.match(/\/proto\/([^/]+)\/?([^/]*)/);if(!m)return null;
   const st=String(CFG.inicio||u.searchParams.get('node-id')||'');
-  const q=new URLSearchParams({'node-id':st.replace(':','-'),'starting-point-node-id':st.replace('-',':'),'embed-host':'sala-de-test','client-id':CFG.cid||'','scaling':CFG.dev==='movil'?'scale-down':'scale-down-width','content-scaling':'fixed','hide-ui':'1'});
+  const q=new URLSearchParams({'node-id':st.replace(':','-'),'starting-point-node-id':st.replace('-',':'),'embed-host':'sala-de-test','client-id':CFG.cid||'','scaling':'scale-down-width','content-scaling':'fixed','hide-ui':'1'});
   return `https://embed.figma.com/proto/${m[1]}/${m[2]||'prototipo'}?${q}`}
 let fig=null,figOk=false;
 function montar(){const e=$('#escena');e.className='on'+(CFG.dev==='movil'?' movil':'');fig=document.createElement('iframe');fig.src=embedUrl();fig.allow='fullscreen';e.appendChild(fig);
