@@ -53,4 +53,4 @@ window.BANCO = [
   { id: 'T1', area: 'Temporada', perfil: 'Todos', escenario: 'Mira qué recomienda el sitio para esta temporada.', criterio: 'Usa el banner de temporada (Ver agenda)', exito: '680:5213', ruta: 'Banner de temporada › Ver agenda' }
 ];
 // Las 3 de la pauta (EVA 3.2)
-window.BANCO_RECOMENDADAS = ['V4', 'F2', 'P2'];
+window.BANCO_RECOMENDADAS = ['V4', 'B2', 'P2'];
