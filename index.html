@@ -127,6 +127,7 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
 .aviso-fin{background:#e6f4e3;border:1px solid #b5d9ae;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px;display:none}
 @media (max-width:700px){.devs{gap:8px}.dev{padding:12px 6px}.dev svg{width:34px;height:34px}.tasks .t{grid-template-columns:1fr;padding-bottom:12px;border-bottom:1px dashed var(--linea)}.tasks .t input[data-k=id]{width:80px}.setup,.sum{margin:16px auto;padding:0 12px 48px}.card{padding:16px}.row .btn{flex:1 1 100%}.linkbox{flex-wrap:wrap}.wait b{font-size:20px}th,td{padding:6px}.sum table{display:block;overflow-x:auto}}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}.modos{grid-template-columns:1fr}.tabs{overflow-x:auto}.tabs button{flex:1 0 auto;padding:10px 14px}.panel{border-left:0;border-top:1px solid var(--linea)}.session.on{grid-template-columns:1fr;grid-template-rows:minmax(200px,42%) minmax(0,1fr)}.stage.movil iframe{width:100%;border-radius:0}}
+.libreCfg{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:14px;padding:12px 14px;border:1px dashed var(--linea);border-radius:12px}.task.libre{border-style:dashed}.reco{font-size:12px;color:var(--suave);margin:6px 0 0;line-height:1.5}
 </style>
 </head>
 <body>
@@ -167,7 +168,7 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
   </div>
   <div class="card" id="cardPartRem" style="display:none"><h3 style="margin-bottom:6px">Participante</h3><p class="help" style="margin:0">En modo remoto, el participante escribe sus datos (alias, edad, ocupación, familiaridad con la tecnología y experiencia con el enoturismo) al abrir el link. Aparecen en el registro y en su ficha.</p></div>
   <div class="card tasks">
-    <div class="row" style="justify-content:space-between;margin:0 0 12px"><h3 style="margin:0">Tareas (2 a 3 escenarios)</h3><button class="btn sec" id="bBanco" type="button">Banco de tareas (<span id="nBanco">0</span>)</button></div>
+    <div class="row" style="justify-content:space-between;margin:0 0 12px"><h3 style="margin:0">Tareas (2 a 3 escenarios + exploración libre)</h3><button class="btn sec" id="bBanco" type="button">Banco de tareas (<span id="nBanco">0</span>)</button></div>
     <div id="banco" hidden>
       <p class="help">Todas las tareas que se pueden hacer en el prototipo, por sección. Marca las que quieras usar (la pauta pide 2 o 3) y presiona "Usar seleccionadas". ★ = recomendadas para la EVA 3.2. "Se marca a mano" = no hay pantalla que la confirme sola.</p>
       <div id="bancoLista"></div>
@@ -175,6 +176,7 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
     </div>
     <div id="taskEd"></div>
     <p class="help">Columnas: número, escenario (lo que lee el participante), criterio (solo para ti) y <b>pantalla de éxito</b>: cuando el participante llega a esa pantalla, la tarea se marca sola como completada (en móvil se usa la pantalla equivalente).</p>
+    <div class="libreCfg"><label class="chk"><input type="checkbox" id="cLibre"><b>Exploración libre al final</b></label><span class="help" style="margin:0">Después de las tareas, el participante recorre el sitio sin instrucciones. Se registra todo igual (pantallas, clics, voz, mapa de calor), aparte de las tareas. Tiempo sugerido:</span><select id="cLibreMin" style="width:auto"><option value="2">2 min</option><option value="3">3 min</option><option value="5">5 min</option></select></div>
   </div>
   <div class="row">
     <button class="btn" id="bStart">Iniciar sesión</button>
@@ -226,7 +228,7 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
   </div>
   <div class="card"><h3>Ficha de testeo por usuario</h3><p class="help">Puedes corregir cualquier celda antes de descargar.</p><table id="tFicha"></table></div>
   <div class="card"><h3>Tareas</h3><table id="tTasks"></table></div>
-  <div class="card"><h3>Mapa de calor</h3><div class="calorbar"><select id="sScr" style="flex:1 1 280px"></select><label class="chk"><input type="checkbox" id="sFail">Solo sin respuesta</label><label class="chk"><input type="checkbox" id="sScroll" checked>Sumar scroll</label><button class="btn sec" id="dlCalor">Descargar imagen (.png)</button></div><div class="hstats" id="sStats"></div><div class="hwrap" style="max-height:none"><canvas id="sCanvas"></canvas></div><div class="zonas" id="sZonas"></div></div>
+  <div class="card"><h3>Mapa de calor</h3><div class="calorbar"><select id="sScr" style="flex:1 1 280px"></select><select id="sFase" style="width:auto"><option value="">Tareas y exploración</option><option value="t">Solo tareas</option><option value="l">Solo exploración libre</option></select><label class="chk"><input type="checkbox" id="sFail">Solo sin respuesta</label><label class="chk"><input type="checkbox" id="sScroll" checked>Sumar scroll</label><button class="btn sec" id="dlCalor">Descargar imagen (.png)</button></div><div class="hstats" id="sStats"></div><div class="hwrap" style="max-height:none"><canvas id="sCanvas"></canvas></div><div class="zonas" id="sZonas"></div></div>
   <div class="card"><h3>Hallazgos propuestos</h3><div class="note">Propuestas automáticas a partir del registro (reglas, no IA). Revisa, borra o corrige. "Acción en Figma" la completa el equipo.</div><table id="tMatriz"></table></div>
 </div></section>
 
@@ -246,7 +248,7 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
   </div>
   <div class="card"><h3>Éxito por tarea</h3><table id="tCombTasks"></table></div>
   <div class="card"><h3>Matriz de hallazgos consolidada</h3><table id="tComb"></table></div>
-  <div class="card"><h3>Mapa de calor de todas las sesiones</h3><div class="calorbar"><select id="cScr" style="flex:1 1 280px"></select><label class="chk"><input type="checkbox" id="cFail">Solo sin respuesta</label><label class="chk"><input type="checkbox" id="cScroll" checked>Sumar scroll</label><button class="btn sec" id="dlCalorC">Descargar imagen (.png)</button></div><div class="hstats" id="cStats"></div><div class="hwrap" style="max-height:none"><canvas id="cCanvas"></canvas></div><div class="zonas" id="cZonas"></div></div>
+  <div class="card"><h3>Mapa de calor de todas las sesiones</h3><div class="calorbar"><select id="cScr" style="flex:1 1 280px"></select><select id="cFase" style="width:auto"><option value="">Tareas y exploración</option><option value="t">Solo tareas</option><option value="l">Solo exploración libre</option></select><label class="chk"><input type="checkbox" id="cFail">Solo sin respuesta</label><label class="chk"><input type="checkbox" id="cScroll" checked>Sumar scroll</label><button class="btn sec" id="dlCalorC">Descargar imagen (.png)</button></div><div class="hstats" id="cStats"></div><div class="hwrap" style="max-height:none"><canvas id="cCanvas"></canvas></div><div class="zonas" id="cZonas"></div></div>
 </div></section>
 
 <div id="heatBig" class="heatbig" hidden><div class="hbhead"><b id="hbTitle">Mapa de calor</b><span class="sp"></span><span id="hbStats" class="hstats" style="margin:0"></span><button class="btn light" id="bHeatClose">Cerrar ✕</button></div><div class="hbbody" id="hbBody"><canvas id="hbCanvas"></canvas></div></div>
@@ -294,6 +296,12 @@ function tareasDef(){const B=window.BANCO||[];const r=(window.BANCO_RECOMENDADAS
 function renderTaskEditor(){let saved=JSON.parse(store.get('sala.tareas')||'null');if(saved&&saved.length===3&&saved.map(t=>t.id).join()==='T1,T2,T3'&&saved.every((t,i)=>t.escenario===TAREAS_DEF[i].escenario)){saved=null;store.set('sala.tareas','')}if(saved&&saved.map(t=>t.id).join()==='V4,F2,P2'){saved=null;store.set('sala.tareas','')}saved=saved||tareasDef();$('#taskEd').innerHTML=saved.map((t,i)=>`<div class="t"><input type="text" value="${esc(t.id)}" data-i="${i}" data-k="id"><textarea data-i="${i}" data-k="escenario">${esc(t.escenario)}</textarea><textarea data-i="${i}" data-k="criterio">${esc(t.criterio)}</textarea><select data-i="${i}" data-k="exito" title="Pantalla de éxito">${opcionesExito(t.exito!==undefined?t.exito:(EXITO_DEF[t.id]||''))}</select></div>`).join('')}
 function readTasks(){const arr=[];document.querySelectorAll('#taskEd .t').forEach(row=>{const o={};row.querySelectorAll('[data-k]').forEach(el=>o[el.dataset.k]=el.value.trim());if(o.id&&o.escenario)arr.push(o)});store.set('sala.tareas',JSON.stringify(arr));return arr}
 renderTaskEditor();
+const LIBRE_ID='Libre';
+function tareaLibre(){const min=+$('#cLibreMin').value||3;return {id:LIBRE_ID,libre:true,min,escenario:'Para terminar, explora el sitio como quieras, sin ninguna tarea. Mira lo que te llame la atención y cuéntanos en voz alta lo que piensas. Cuando quieras, presiona "Terminé".',criterio:'Sin tarea: observar qué mira, por dónde entra y qué ignora (sugerido '+min+' min)',exito:'',inicio:null,fin:null,resultado:null}}
+$('#cLibre').checked=store.get('sala.libre')!=='0';$('#cLibreMin').value=store.get('sala.libreMin')||'3';
+$('#cLibre').onchange=()=>store.set('sala.libre',$('#cLibre').checked?'1':'0');$('#cLibreMin').onchange=()=>store.set('sala.libreMin',$('#cLibreMin').value);
+const esLibre=t=>!!(t&&(t.libre||t.id===LIBRE_ID));
+function recorrido(tk,ses){const ids=[];for(const e of ses.eventos)if(e.tarea===tk.id&&e.tipo==='pantalla'&&e.id&&ids[ids.length-1]!==e.id)ids.push(e.id);return ids}
 // Client ID del equipo: se usa siempre por defecto (no es secreto). Cambiarlo aquí si se crea otra app.
 const CID_EQUIPO='w6zb5o7oRwVOCN9lbVUZ8E';
 (()=>{const q=new URLSearchParams(location.search).get('cid');if(q)store.set('sala.cid',q.trim());const g=store.get('sala.cid');$('#cCid').value=(g&&g!=='PRUEBA-SIN-ID')?g:CID_EQUIPO})();
@@ -332,7 +340,7 @@ function newSession(demo){
   let dev=$('#cDev').value;if(dev==='auto'&&!(!demo&&modoActual()==='remota'))dev=devAuto();
   S={version:1,demo:!!demo,inicio:Date.now(),dispositivo:dev,
      remoto:!demo&&modoActual()==='remota',participante:{alias:(!demo&&modoActual()==='remota')?'Participante':($('#pAlias').value.trim()||'P?'),perfil:$('#pPerfil').value.trim(),tecnologia:$('#pTec').value,modalidad:(!demo&&modoActual()==='remota')?'Remota en vivo (link, sin moderación presencial)':$('#pMod').value,fecha:new Date().toLocaleString('es-CL')},
-     tareas:readTasks().map(t=>({...t,inicio:null,fin:null,resultado:null})),
+     tareas:readTasks().map(t=>({...t,inicio:null,fin:null,resultado:null})).concat($('#cLibre').checked?[tareaLibre()]:[]),
      actual:null,pantalla:null,eventos:[],voz:[],marcas:[],calor:[],figma:false,respaldo:false,id:'s'+Date.now()};
 }
 const now=()=>S?Date.now()-S.inicio:0;
@@ -461,12 +469,18 @@ function metricas(tk,ses){
 }
 function renderTasks(){
   if(!S)return;
-  $('#taskList').innerHTML=S.tareas.map(tk=>{const m=metricas(tk);const cur=S.actual===tk.id;const res=tk.resultado?`<div class="res" style="color:${tk.resultado==='Completada'?'var(--ok)':tk.resultado==='No completada'?'var(--err)':'var(--warn)'}">${tk.resultado}</div>`:'';
+  $('#taskList').innerHTML=S.tareas.map(tk=>{const m=metricas(tk);const cur=S.actual===tk.id;if(esLibre(tk))return tarjetaLibre(tk,m,cur);const res=tk.resultado?`<div class="res" style="color:${tk.resultado==='Completada'?'var(--ok)':tk.resultado==='No completada'?'var(--err)':'var(--warn)'}">${tk.resultado}</div>`:'';
    return `<div class="task ${cur?'cur':''}"><h3>${esc(tk.id)}</h3><p>${esc(tk.escenario)}</p><p><b>Éxito:</b> ${esc(tk.criterio)}</p>${res}
    <div class="metrics"><div class="metric"><b>${m.dur!=null?fmt(m.dur):'—'}</b><span>tiempo</span></div><div class="metric"><b>${m.clics}</b><span>clics</span></div><div class="metric"><b style="color:${m.perdidos?'var(--err)':''}">${m.perdidos}</b><span>sin respuesta</span></div></div>
    ${tk.resultado?`<div class="seq"><span>Facilidad (1 muy difícil · 7 muy fácil):</span>${[1,2,3,4,5,6,7].map(n=>`<button class="${tk.seq===n?'on':''}" data-seq="${n}" data-t="${tk.id}" ${S.remoto?'disabled':''}>${n}</button>`).join('')}${tk.seqComentario?`<p class="help" style="margin:6px 0 0">“${esc(tk.seqComentario)}”</p>`:''}${S.remoto&&tk.seq==null?'<p class="help" style="margin:6px 0 0">Esperando su respuesta…</p>':''}</div>`:''}
    <div class="acts">${!tk.inicio?`<button class="btn" data-a="ini" data-t="${tk.id}">Iniciar</button>`:cur?`<button class="btn ok" data-a="Completada" data-t="${tk.id}">Completada</button><button class="btn warn" data-a="Completada con dificultad" data-t="${tk.id}">Con dificultad</button><button class="btn err" data-a="No completada" data-t="${tk.id}">No completada</button>`:`<button class="btn sec" data-a="ini" data-t="${tk.id}">Repetir</button>`}</div></div>`}).join('');
 }
+function tarjetaLibre(tk,m,cur){const rec=recorrido(tk,S);const pasado=cur&&m.dur!=null&&m.dur>=(tk.min||3)*60000;
+  return `<div class="task libre ${cur?'cur':''}"><h3>Exploración libre</h3><p>${esc(tk.escenario)}</p><p><b>Qué mirar:</b> ${esc(tk.criterio)}</p>${tk.resultado?'<div class="res" style="color:var(--ok)">Terminada</div>':''}
+   <div class="metrics"><div class="metric"><b style="color:${pasado?'var(--warn)':''}">${m.dur!=null?fmt(m.dur):'—'}</b><span>tiempo${pasado?' (ya pasó lo sugerido)':''}</span></div><div class="metric"><b>${m.clics}</b><span>clics</span></div><div class="metric"><b>${new Set(rec).size}</b><span>pantallas</span></div></div>
+   ${rec.length?`<p class="reco"><b>Recorrido:</b> ${esc(rec.map(nombrePantalla).join(' → '))}</p>`:''}
+   ${tk.seqComentario?`<p class="help" style="margin:6px 0 0">“${esc(tk.seqComentario)}”</p>`:tk.resultado&&S.remoto?'<p class="help" style="margin:6px 0 0">Esperando su comentario…</p>':''}
+   <div class="acts">${!tk.inicio?`<button class="btn" data-a="ini" data-t="${tk.id}">Iniciar exploración</button>`:cur?`<button class="btn ok" data-a="Explorada" data-t="${tk.id}">Terminar exploración</button>`:`<button class="btn sec" data-a="ini" data-t="${tk.id}">Repetir</button>`}</div></div>`}
 $('#taskList').addEventListener('click',e=>{const q=e.target.closest('button[data-seq]');if(q){const tk=S.tareas.find(t=>t.id===q.dataset.t);tk.seq=+q.dataset.seq;ev('moderador',{texto:tk.id+' · facilidad '+tk.seq+'/7'});renderTasks();return}const b=e.target.closest('button[data-a]');if(!b)return;const tk=S.tareas.find(t=>t.id===b.dataset.t);
   if(b.dataset.a==='ini'){if(S.actual&&S.actual!==tk.id){const c=S.tareas.find(t=>t.id===S.actual);if(c&&!c.fin){c.fin=now();c.resultado=c.resultado||'Sin cerrar'}}tk.inicio=now();tk.fin=null;tk.resultado=null;S.actual=tk.id;ev('moderador',{texto:'Inicio '+tk.id})}
   else{tk.fin=now();tk.resultado=b.dataset.a;ev('moderador',{texto:tk.id+' · '+b.dataset.a});S.actual=null}
@@ -500,12 +514,13 @@ $('#bNew').onclick=()=>{S=null;$('#vSum').classList.remove('on');$('#vSetup').cl
 function hallazgos(ses){
   const out=[];const add=(clave,problema,sev,evid,tarea)=>out.push({clave,problema,severidad:sev,tarea,evidencia:evid,accion:''});
   for(const tk of ses.tareas){if(!tk.inicio&&tk.inicio!==0)continue;const m=metricas(tk,ses);
-    if(tk.resultado==='No completada')add('nc-'+tk.id,`No logró completar ${tk.id}: ${tk.escenario}`,'Alta',`${fmt(tk.inicio)}–${fmt(tk.fin)} · ${vozResumen(ses,tk.inicio,tk.fin)}`,tk.id);
+    const lib=esLibre(tk);
+    if(lib){}else if(tk.resultado==='No completada')add('nc-'+tk.id,`No logró completar ${tk.id}: ${tk.escenario}`,'Alta',`${fmt(tk.inicio)}–${fmt(tk.fin)} · ${vozResumen(ses,tk.inicio,tk.fin)}`,tk.id);
     else if(tk.resultado==='Completada con dificultad')add('cd-'+tk.id,`Completó ${tk.id} con dificultad`,'Media',`${fmt(tk.inicio)}–${fmt(tk.fin)} · ${vozResumen(ses,tk.inicio,tk.fin)}`,tk.id);
-    if(tk.seq!=null&&tk.seq<=3)add('seq-'+tk.id,`${tk.id} se percibió difícil (facilidad ${tk.seq}/7)`,tk.seq<=2?'Alta':'Media',tk.seqComentario?`“${tk.seqComentario}”`:'Sin comentario',tk.id);
+    if(!lib&&tk.seq!=null&&tk.seq<=3)add('seq-'+tk.id,`${tk.id} se percibió difícil (facilidad ${tk.seq}/7)`,tk.seq<=2?'Alta':'Media',tk.seqComentario?`“${tk.seqComentario}”`:'Sin comentario',tk.id);
     const porPant={};for(const e of m.perdidosEv){const k=e.pantalla||'?';(porPant[k]=porPant[k]||[]).push(e)}
     for(const [p,arr] of Object.entries(porPant)){if(arr.length>=2){const zonas=[...new Set(arr.map(e=>e.elemento))].slice(0,3).join(', ');add('miss-'+p,`Clics sin respuesta en ${nombrePantalla(p)} (${zonas})`,arr.length>=4?'Alta':'Media',`${arr.length} clics · ${fmt(arr[0].t)} · “${vozCercaS(ses,arr[0].t,8000,4000)}”`,tk.id)}}
-    if(m.maxGap>=15000)add('duda-'+(m.gapScr||tk.id),`Duda prolongada (${Math.round(m.maxGap/1000)} s sin acción) en ${nombrePantalla(m.gapScr||ses.eventos.find(e=>e.t>=m.gapAt)?.pantalla)}`,m.maxGap>=30000?'Media':'Baja',`${fmt(m.gapAt)} · “${vozCercaS(ses,m.gapAt,2000,m.maxGap)}”`,tk.id);
+    if(!lib&&m.maxGap>=15000)add('duda-'+(m.gapScr||tk.id),`Duda prolongada (${Math.round(m.maxGap/1000)} s sin acción) en ${nombrePantalla(m.gapScr||ses.eventos.find(e=>e.t>=m.gapAt)?.pantalla)}`,m.maxGap>=30000?'Media':'Baja',`${fmt(m.gapAt)} · “${vozCercaS(ses,m.gapAt,2000,m.maxGap)}”`,tk.id);
   }
   for(const e of ses.eventos.filter(e=>e.clave==='fuera')){const prev=[...ses.eventos].reverse().find(x=>x.t<=e.t&&x.tipo==='clic');add('fuera-'+(prev?prev.elemento:''),`Intentó usar algo que no está en el prototipo${prev?' ('+prev.elemento+')':''}: espera esa función`,'Baja',fmt(e.t),e.tarea)}
   for(const e of ses.eventos.filter(e=>e.clave==='faltan'))add('faltan','Intentó enviar el formulario de viñas sin completar los campos','Media',fmt(e.t),e.tarea);
@@ -518,8 +533,8 @@ function vozResumen(ses,a,b){const txt=(ses.voz||[]).filter(v=>v.t>=a&&v.t<=b).m
 
 /* ================= resumen ================= */
 function fichaRows(ses){
-  const p=ses.participante;const ts=ses.tareas.filter(t=>t.inicio!=null);
-  return [
+  const p=ses.participante;const ts=ses.tareas.filter(t=>t.inicio!=null&&!esLibre(t));const lb=ses.tareas.find(t=>esLibre(t)&&t.inicio!=null);
+  const filas=[
     ['Nombre / Alias del participante',p.alias],
     ['Perfil del usuario (edad, ocupación, nivel de familiaridad tecnológica)',[p.perfil,'familiaridad '+p.tecnologia.toLowerCase()].filter(Boolean).join(' · ')],
     ['Fecha y modalidad del testeo',p.fecha+' · '+p.modalidad+' · '+(ses.dispositivo==='movil'?'móvil':'escritorio')],
@@ -530,13 +545,15 @@ function fichaRows(ses){
     ['Nivel de éxito de la tarea (Completada / Completada con dificultad / No completada)',ts.map(t=>t.id+': '+(t.resultado||'Sin cerrar')).join('\n')],
     ['Facilidad percibida por tarea (1 muy difícil · 7 muy fácil) y comentario',ts.map(t=>t.id+': '+(t.seq!=null?t.seq+'/7':'—')+(t.seqComentario?' · “'+t.seqComentario+'”':'')).join('\n')]
   ];
+  if(lb){const m=metricas(lb,ses);const rec=recorrido(lb,ses);filas.push(['Exploración libre (sin tarea)',[(m.dur!=null?fmt(m.dur):'—')+' · '+m.clics+' clics ('+m.perdidos+' sin respuesta) · '+new Set(rec).size+' pantallas','Recorrido: '+(rec.map(nombrePantalla).join(' → ')||'sin cambios de pantalla'),lb.seqComentario?'Comentario: “'+lb.seqComentario+'”':'',vozResumen(ses,lb.inicio,lb.fin??ses.fin)].filter(Boolean).join('\n')])}
+  return filas;
 }
 let H=[];
 function renderSummary(){
   const ses=S;H=hallazgos(ses);
   $('#sumMeta').textContent=`${ses.participante.alias} · ${ses.participante.fecha} · duración ${fmt(ses.fin)} · ${ses.eventos.length} eventos · ${ses.voz.length} frases · fuente: ${ses.figma?'avisos de Figma':ses.respaldo?'respaldo (extensión)':'sin datos del prototipo'}${ses.demo?' · DEMOSTRACIÓN':''}`;
   $('#tFicha').innerHTML='<tr><th style="width:34%">Campo</th><th>Detalle / Registro</th></tr>'+fichaRows(ses).map(r=>`<tr><td>${esc(r[0])}</td><td contenteditable style="white-space:pre-line">${esc(r[1])}</td></tr>`).join('');
-  $('#tTasks').innerHTML='<tr><th>Tarea</th><th>Resultado</th><th>Tiempo</th><th>Clics</th><th>Sin respuesta</th><th>Pantallas</th><th>Mayor pausa</th><th>Facilidad</th></tr>'+ses.tareas.filter(t=>t.inicio!=null).map(t=>{const m=metricas(t,ses);return `<tr><td>${esc(t.id)}</td><td>${esc(t.resultado||'Sin cerrar')}</td><td>${m.dur!=null?fmt(m.dur):'—'}</td><td>${m.clics}</td><td>${m.perdidos}</td><td>${m.pantallas}</td><td>${Math.round(m.maxGap/1000)} s</td><td>${t.seq!=null?t.seq+'/7':'—'}</td></tr>`}).join('');
+  $('#tTasks').innerHTML='<tr><th>Tarea</th><th>Resultado</th><th>Tiempo</th><th>Clics</th><th>Sin respuesta</th><th>Pantallas</th><th>Mayor pausa</th><th>Facilidad</th></tr>'+ses.tareas.filter(t=>t.inicio!=null).map(t=>{const m=metricas(t,ses);return `<tr><td>${esc(esLibre(t)?'Exploración libre':t.id)}</td><td>${esc(esLibre(t)?'Sin tarea · '+recorrido(t,ses).length+' pasos':(t.resultado||'Sin cerrar'))}</td><td>${m.dur!=null?fmt(m.dur):'—'}</td><td>${m.clics}</td><td>${m.perdidos}</td><td>${m.pantallas}</td><td>${Math.round(m.maxGap/1000)} s</td><td>${t.seq!=null?t.seq+'/7':'—'}</td></tr>`}).join('');
   renderMatriz('#tMatriz',H.map(h=>({...h,frecuencia:'Única (1/1)'})));
   heatSelect('#sScr',S.calor,S.pantalla);dibujarS();
 }
@@ -558,8 +575,8 @@ $('#combFiles').onchange=async e=>{
   consolidar(sess)};
 function consolidar(sess){
   if(!sess.length)return;const N=sess.length;
-  const tasks={};for(const s of sess)for(const t of s.tareas){if(t.inicio==null)continue;const m=metricas(t,s);const o=tasks[t.id]=tasks[t.id]||{n:0,ok:0,dif:0,no:0,tiempos:[],seqs:[]};if(t.seq!=null)o.seqs.push(t.seq);o.n++;if(t.resultado==='Completada')o.ok++;else if(t.resultado==='Completada con dificultad')o.dif++;else o.no++;if(m.dur!=null)o.tiempos.push(m.dur)}
-  $('#tCombTasks').innerHTML='<tr><th>Tarea</th><th>Participantes</th><th>Completada</th><th>Con dificultad</th><th>No completada</th><th>Tiempo promedio</th><th>Facilidad promedio</th></tr>'+Object.entries(tasks).map(([k,o])=>`<tr><td>${k}</td><td>${o.n}</td><td>${o.ok}</td><td>${o.dif}</td><td>${o.no}</td><td>${o.tiempos.length?fmt(o.tiempos.reduce((a,b)=>a+b,0)/o.tiempos.length):'—'}</td><td>${o.seqs.length?(o.seqs.reduce((a,b)=>a+b,0)/o.seqs.length).toFixed(1)+'/7 ('+o.seqs.length+')':'—'}</td></tr>`).join('');
+  const tasks={};const LB={n:0,tiempos:[],pant:{},entrada:{}};for(const s of sess)for(const t of s.tareas){if(t.inicio==null)continue;const m=metricas(t,s);if(esLibre(t)){LB.n++;if(m.dur!=null)LB.tiempos.push(m.dur);const rec=recorrido(t,s);for(const id of new Set(rec))LB.pant[id]=(LB.pant[id]||0)+1;if(rec[1])LB.entrada[rec[1]]=(LB.entrada[rec[1]]||0)+1;continue}const o=tasks[t.id]=tasks[t.id]||{n:0,ok:0,dif:0,no:0,tiempos:[],seqs:[]};if(t.seq!=null)o.seqs.push(t.seq);o.n++;if(t.resultado==='Completada')o.ok++;else if(t.resultado==='Completada con dificultad')o.dif++;else o.no++;if(m.dur!=null)o.tiempos.push(m.dur)}
+  $('#tCombTasks').innerHTML='<tr><th>Tarea</th><th>Participantes</th><th>Completada</th><th>Con dificultad</th><th>No completada</th><th>Tiempo promedio</th><th>Facilidad promedio</th></tr>'+Object.entries(tasks).map(([k,o])=>`<tr><td>${k}</td><td>${o.n}</td><td>${o.ok}</td><td>${o.dif}</td><td>${o.no}</td><td>${o.tiempos.length?fmt(o.tiempos.reduce((a,b)=>a+b,0)/o.tiempos.length):'—'}</td><td>${o.seqs.length?(o.seqs.reduce((a,b)=>a+b,0)/o.seqs.length).toFixed(1)+'/7 ('+o.seqs.length+')':'—'}</td></tr>`).join('')+(LB.n?`<tr><td>Exploración libre</td><td>${LB.n}</td><td colspan="3" style="white-space:normal"><b>Pantallas que más visitaron:</b> ${Object.entries(LB.pant).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([id,n])=>esc(nombrePantalla(id))+' ('+n+'/'+LB.n+')').join(', ')||'—'}${Object.keys(LB.entrada).length?'<br><b>A dónde fueron primero:</b> '+Object.entries(LB.entrada).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([id,n])=>esc(nombrePantalla(id))+' ('+n+')').join(', '):''}</td><td>${LB.tiempos.length?fmt(LB.tiempos.reduce((a,b)=>a+b,0)/LB.tiempos.length):'—'}</td><td>—</td></tr>`:'');
   const groups={};for(const s of sess){const seen=new Set();for(const h of hallazgos(s)){const k=h.clave.replace(/^marca-\d+/,'marca-'+h.problema);if(seen.has(k))continue;seen.add(k);const g=groups[k]=groups[k]||{...h,quienes:[],evid:[],sevs:[]};g.quienes.push(s.participante.alias);g.evid.push(s.participante.alias+': '+h.evidencia);g.sevs.push(h.severidad)}}
   const rank={Alta:3,Media:2,Baja:1};
   COMB=Object.values(groups).map(g=>{const n=g.quienes.length;const fr=n/N>=0.6?'Constante':n>1?'Ocasional':'Única';const sev=g.sevs.sort((a,b)=>rank[b]-rank[a])[0];return {problema:g.problema,severidad:sev,frecuencia:`${fr} (${n}/${N}: ${g.quienes.join(', ')})`,accion:'',evidencia:g.evid.join(' | '),score:rank[sev]*10+n}}).sort((a,b)=>b.score-a.score);
@@ -573,7 +590,7 @@ function guardarSesion(s){const a=leerSesiones().filter(x=>x.id!==s.id);a.unshif
 function contarHist(){$('#nHist').textContent=leerSesiones().length}
 const DEVN={escritorio:'Escritorio',tablet:'Tablet',movil:'Celular',auto:'Automático'};
 function renderHist(){const a=leerSesiones();$('#histVacio').style.display=a.length?'none':'';
-  $('#tHist').innerHTML=a.length?'<tr><th>Fecha</th><th>Participante</th><th>Versión</th><th>Modalidad</th><th>Duración</th><th>Tareas</th><th>Clics</th><th></th></tr>'+a.map((s,i)=>{const ts=s.tareas.filter(t=>t.inicio!=null);const ic=t=>t.resultado==='Completada'?'✓':t.resultado==='Completada con dificultad'?'~':t.resultado?'✕':'·';
+  $('#tHist').innerHTML=a.length?'<tr><th>Fecha</th><th>Participante</th><th>Versión</th><th>Modalidad</th><th>Duración</th><th>Tareas</th><th>Clics</th><th></th></tr>'+a.map((s,i)=>{const ts=s.tareas.filter(t=>t.inicio!=null);const ic=t=>esLibre(t)?'◌':t.resultado==='Completada'?'✓':t.resultado==='Completada con dificultad'?'~':t.resultado?'✕':'·';
     const dur=s.fin!=null?fmt(s.fin):'—';const clics=s.eventos.filter(e=>e.tipo==='clic').length;
     return `<tr><td>${esc(s.participante.fecha||'')}</td><td><b>${esc(s.participante.alias)}</b>${s.participante.perfil?'<br><span class="help">'+esc(s.participante.perfil)+'</span>':''}</td><td>${DEVN[s.dispositivo]||esc(s.dispositivo||'')}</td><td>${esc((s.participante.modalidad||'').split(' (')[0])}</td><td>${dur}</td><td title="✓ completada · ~ con dificultad · ✕ no completada">${ts.map(t=>esc(t.id)+' '+ic(t)).join(' · ')||'—'}</td><td>${clics}</td>
       <td style="white-space:nowrap"><button class="btn" data-a="ver" data-i="${i}" style="padding:6px 12px;font-size:12px">Ver</button> <button class="btn sec" data-a="dl" data-i="${i}" style="padding:6px 12px;font-size:12px">.json</button> <button class="btn sec" data-a="del" data-i="${i}" style="padding:6px 12px;font-size:12px">Borrar</button></td></tr>`}).join(''):'';}
@@ -629,11 +646,12 @@ function renderBig(){const id=$('#hScr').value;if(!id)return;$('#hbTitle').textC
 $('#bHeatBig').onclick=()=>{$('#heatBig').hidden=false;renderBig()};$('#bHeatClose').onclick=()=>{$('#heatBig').hidden=true};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#heatBig').hidden)$('#heatBig').hidden=true});
 ['#hScr','#hFail','#hScroll'].forEach(s=>$(s).addEventListener('change',()=>{if(s==='#hScr')$('#hFollow').checked=false;renderHeat(true)}));$('#hFollow').onchange=()=>renderHeat(true);
-function dibujarS(){if(!window.Calor||!S)return;const id=$('#sScr').value;if(!id){$('#sStats').textContent='Esta sesión no tiene clics con posición.';return}const r=pintarCalor($('#sCanvas'),id,S.calor,{ancho:Math.min(1000,$('#sCanvas').parentElement.clientWidth||900),soloFallidos:$('#sFail').checked,sumarScroll:$('#sScroll').checked});$('#sStats').textContent=statsTxt(r);$('#sZonas').innerHTML=zonasTxt(r)}
-['#sScr','#sFail','#sScroll'].forEach(s=>$(s).addEventListener('change',dibujarS));
+function dibujarS(){if(!window.Calor||!S)return;const id=$('#sScr').value;if(!id){$('#sStats').textContent='Esta sesión no tiene clics con posición.';return}const r=pintarCalor($('#sCanvas'),id,fase(S.calor,$('#sFase').value),{ancho:Math.min(1000,$('#sCanvas').parentElement.clientWidth||900),soloFallidos:$('#sFail').checked,sumarScroll:$('#sScroll').checked});$('#sStats').textContent=statsTxt(r);$('#sZonas').innerHTML=zonasTxt(r)}
+const fase=(pts,f)=>!f?pts:pts.filter(p=>f==='l'?p.tarea===LIBRE_ID:p.tarea!==LIBRE_ID);
+['#sScr','#sFase','#sFail','#sScroll'].forEach(s=>$(s).addEventListener('change',dibujarS));
 let CALORC=[];
-function dibujarC(){if(!window.Calor)return;const id=$('#cScr').value;if(!id){$('#cStats').textContent='Las sesiones cargadas no tienen clics con posición.';return}const r=pintarCalor($('#cCanvas'),id,CALORC,{ancho:Math.min(1000,$('#cCanvas').parentElement.clientWidth||900),soloFallidos:$('#cFail').checked,sumarScroll:$('#cScroll').checked});$('#cStats').textContent=statsTxt(r)+' Suma de todas las sesiones cargadas.';$('#cZonas').innerHTML=zonasTxt(r)}
-['#cScr','#cFail','#cScroll'].forEach(s=>$(s).addEventListener('change',dibujarC));
+function dibujarC(){if(!window.Calor)return;const id=$('#cScr').value;if(!id){$('#cStats').textContent='Las sesiones cargadas no tienen clics con posición.';return}const r=pintarCalor($('#cCanvas'),id,fase(CALORC,$('#cFase').value),{ancho:Math.min(1000,$('#cCanvas').parentElement.clientWidth||900),soloFallidos:$('#cFail').checked,sumarScroll:$('#cScroll').checked});$('#cStats').textContent=statsTxt(r)+' Suma de todas las sesiones cargadas.';$('#cZonas').innerHTML=zonasTxt(r)}
+['#cScr','#cFase','#cFail','#cScroll'].forEach(s=>$(s).addEventListener('change',dibujarC));
 const pngDe=(cv,nombre)=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nombre;a.click()});
 $('#dlCalor').onclick=()=>pngDe($('#sCanvas'),`calor-${S.participante.alias}-${(nombrePantalla($('#sScr').value)).replace(/[^\wáéíóúñ]+/gi,'-')}.png`);
 $('#dlCalorC').onclick=()=>pngDe($('#cCanvas'),`calor-consolidado-${(nombrePantalla($('#cScr').value)).replace(/[^\wáéíóúñ]+/gi,'-')}.png`);
@@ -641,7 +659,7 @@ $('#dlCalorC').onclick=()=>pngDe($('#cCanvas'),`calor-consolidado-${(nombrePanta
 /* ================= modalidad remota (link) ================= */
 let peer=null,conn=null,llamada=null;
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-function linkParticipante(){const cfg={v:1,peer:S.peerId,url:$('#cUrl').value.trim(),cid:$('#cCid').value.trim(),dev:S.dispositivo,inicioM:M.inicio.movil,inicioE:M.inicio.escritorio,inicioT:M.inicio.tablet,voz:$('#cVoz').value,inicio:M.inicio[S.dispositivo]||M.inicio.escritorio,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,exito:exitoIds(t)}))};
+function linkParticipante(){const cfg={v:1,peer:S.peerId,url:$('#cUrl').value.trim(),cid:$('#cCid').value.trim(),dev:S.dispositivo,inicioM:M.inicio.movil,inicioE:M.inicio.escritorio,inicioT:M.inicio.tablet,voz:$('#cVoz').value,inicio:M.inicio[S.dispositivo]||M.inicio.escritorio,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,exito:exitoIds(t),libre:esLibre(t)||undefined,min:t.min}))};
   S.cfgPart=cfg;return new URL('participante.html',location.href).href.split('#')[0].split('?')[0]+'#s='+S.peerId}
 function montarRemoto(st){st.innerHTML=`<div class="remote"><video id="rv" autoplay playsinline></video>
   <div class="wait" id="rwait"><b id="rwT">Preparando la conexión…</b><p id="rwP">Un momento.</p>
@@ -680,7 +698,7 @@ function onRemoto(m){if(!S||!m||typeof m!=='object')return;
     else{tk.fin=now();tk.resultado=m.resultado;ev('moderador',{texto:tk.id+' · '+m.resultado+(m.auto?' (llegó a la pantalla de éxito)':' (lo indicó el participante)')});S.actual=null}
     renderTasks();return}
   if(m.k==='perfil'&&m.datos){const d=m.datos,p=S.participante;p.alias=(d.alias||'Participante').slice(0,40);p.perfil=[d.edad?d.edad+' años':'',d.ocupacion,d.enoturismo?'enoturismo: '+d.enoturismo.toLowerCase():''].filter(Boolean).join(' · ');p.tecnologia=d.tecnologia||p.tecnologia;ev('sistema',{texto:'Datos del participante: '+p.alias+(p.perfil?' · '+p.perfil:'')+' · tecnología '+(p.tecnologia||'').toLowerCase()});return}
-  if(m.k==='seq'){const tk=S.tareas.find(t=>t.id===m.id);if(tk){tk.seq=m.valor;tk.seqComentario=m.comentario||'';ev('voz',{texto:'['+tk.id+' · facilidad '+m.valor+'/7]'+(m.comentario?' '+m.comentario:'')});renderTasks()}return}
+  if(m.k==='seq'){const tk=S.tareas.find(t=>t.id===m.id);if(tk){if(m.valor!=null)tk.seq=m.valor;tk.seqComentario=m.comentario||'';ev('voz',{texto:'['+(esLibre(tk)?'Exploración libre · comentario':tk.id+' · facilidad '+m.valor+'/7')+']'+(m.comentario?' '+m.comentario:'')});renderTasks()}return}
   if(m.k==='fin'){ev('sistema',{texto:'El participante terminó todas las tareas'});const a=$('#avisoFin');a.style.display='block';a.innerHTML='<b>El participante terminó.</b> Presiona "Terminar sesión" para ver la ficha, la matriz y el mapa de calor.';return}
 }
 $('#bMsg').onclick=()=>{const t=$('#msgTxt').value.trim();if(!t||!S)return;enviar({k:'msg',texto:t});ev('moderador',{texto:'Mensaje enviado: '+t});$('#msgTxt').value=''};

@@ -67,6 +67,16 @@ La conexión es directa entre los dos navegadores (PeerJS). No se graba video ni
    **Copiar para IA** copia el registro con instrucciones. Puedes pegarlo en Claude para pedir un resumen redactado.
 8. Después de todas las sesiones, usa **Consolidar sesiones**: carga los `.json` y obtienes la matriz con la frecuencia real (por ejemplo, "Constante (4/5)") y el éxito por tarea.
 
+## Exploración libre al final
+
+Viene activada por defecto (casilla bajo las tareas, con tiempo sugerido de 2, 3 o 5 min). Después de las tareas, el participante recorre el sitio sin instrucciones y piensa en voz alta. No tiene éxito ni fracaso ni escala de facilidad: al terminar solo se le pregunta qué le llamó la atención.
+
+- Todo se registra aparte, con la etiqueta "Libre": recorrido de pantallas en orden, clics, clics sin respuesta, voz y comentario.
+- En la ficha aparece como fila propia ("Exploración libre (sin tarea)").
+- En el mapa de calor del resumen y del consolidado puedes ver "Solo tareas", "Solo exploración libre" o ambos.
+- En el consolidado: qué pantallas visitó cada participante y adónde fueron primero.
+- En remoto, a los minutos sugeridos le aparece un aviso suave: "Cuando quieras, presiona Terminé".
+
 ## Qué registra y qué no
 
 - **Registra:**
