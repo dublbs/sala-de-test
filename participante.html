@@ -46,6 +46,8 @@ button{font:inherit;cursor:pointer}
 .escala button{height:52px;border-radius:12px;border:1.5px solid var(--linea);background:#fff;font:600 18px Poppins,system-ui,sans-serif;color:var(--texto);cursor:pointer}
 .escala button:hover{border-color:var(--marca)}.escala button.on{background:var(--marca);border-color:var(--marca);color:#fff}
 .escala-ext{display:flex;justify-content:space-between;font-size:12px;color:var(--suave);margin-top:6px}
+.datos label{display:block;font-size:13px;color:var(--suave);margin:10px 0 0}.datos input,.datos select{display:block;width:100%;margin-top:4px;padding:11px 12px;border:1px solid var(--linea);border-radius:10px;font:15px Poppins,system-ui,sans-serif;color:var(--texto);background:#fff}
+.datos .dos{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:520px){.datos .dos{grid-template-columns:1fr}}
 .punto{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e04646;margin-right:6px;animation:p 1.6s infinite}
 @keyframes p{50%{opacity:.3}}
 </style>
@@ -62,6 +64,14 @@ button{font:inherit;cursor:pointer}
     <li>Quien modera verá en vivo esta pestaña, escuchará tu voz y verá tus clics.</li>
     <li>No se graba video ni audio. Se guarda solo texto: los clics y lo que dices transcrito.</li>
   </ul>
+  <div class="datos">
+    <h2 style="margin-top:6px">Tus datos</h2>
+    <label>Nombre o alias *<input id="dAlias" maxlength="40" autocomplete="off" placeholder="Como quieras que te llamemos"></label>
+    <div class="dos"><label>Edad<select id="dEdad"><option value="">Prefiero no decir</option><option>18 a 24</option><option>25 a 34</option><option>35 a 44</option><option>45 a 54</option><option>55 a 64</option><option>65 o más</option></select></label>
+    <label>Ocupación<input id="dOcu" maxlength="60" placeholder="Ej.: estudiante, diseñadora"></label></div>
+    <div class="dos"><label>¿Qué tanto usas internet y apps?<select id="dTec"><option value="Alta">Mucho (todos los días, sin problemas)</option><option value="Media" selected>Lo normal</option><option value="Baja">Poco (me cuesta un poco)</option></select></label>
+    <label>¿Has hecho enoturismo?<select id="dEno"><option>Nunca</option><option>Alguna vez</option><option>Seguido</option></select></label></div>
+  </div>
   <label class="chk"><input type="checkbox" id="acepto"> <span>Acepto participar y que se registren mis clics y la transcripción de mi voz para este estudio.</span></label>
   <div class="fila"><button class="btn" id="bConectar" disabled>Empezar</button></div>
   <div class="estado" id="estBien"></div>
@@ -130,7 +140,8 @@ $('#cod').addEventListener('keydown',e=>{if(e.key==='Enter')$('#bCod').click()})
 const esChrome=/Google Chrome|Microsoft Edge/.test(((navigator.userAgentData&&navigator.userAgentData.brands)||[]).map(b=>b.brand).join(' '))||(!navigator.userAgentData&&/Chrome\//.test(navigator.userAgent));
 const esMovil=/Android|iPhone|iPad/i.test(navigator.userAgent);
 if(SID&&(!esChrome||esMovil))$('#estBien').textContent=esMovil?'Estás en un celular o tablet: podrás hacer las tareas, pero no compartir la pantalla.':'Te recomendamos usar Google Chrome para que todo funcione.';
-$('#acepto').onchange=e=>$('#bConectar').disabled=!e.target.checked;
+const okForm=()=>{$('#bConectar').disabled=!($('#acepto').checked&&$('#dAlias').value.trim())};$('#acepto').onchange=okForm;$('#dAlias').addEventListener('input',okForm);
+const datos=()=>({alias:$('#dAlias').value.trim(),edad:$('#dEdad').value,ocupacion:$('#dOcu').value.trim(),tecnologia:$('#dTec').value,enoturismo:$('#dEno').value});
 
 /* ---------- conexión ---------- */
 let peer=null,conn=null,stream=null,listo=false,cola=[],cfgRes=null;const cfgListo=new Promise(r=>{cfgRes=r;if(CFG)r()});
@@ -217,6 +228,7 @@ $('#bConectar').onclick=async()=>{const b=$('#bConectar');b.disabled=true;const 
   const r=await compartir();
   est.textContent='Conectando con quien modera…';
   try{await asegurarConexion();await Promise.race([cfgListo,new Promise((_,j)=>setTimeout(()=>j(new Error('cfg')),10000))])}catch(e){est.className='estado err';est.textContent=e.message==='nomod'?'Quien modera no está conectado. Pídele que abra la sala y vuelve a intentar.':e.message==='cfg'?'Conectado, pero la sala no envió las tareas. Pide a quien modera un link nuevo.':'No se pudo conectar. Revisa tu internet y vuelve a intentar.';b.disabled=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;return}
+  enviar({k:'perfil',datos:datos()});
   if(stream)peer.call(SID,stream);
   if(r.mic)voz();
   show('#cBien',false);montar();actual=0;verTarea(0)};

@@ -92,6 +92,10 @@ td[contenteditable]{background:#fffdf7}
 .dev.on{border-color:var(--marca);background:var(--claro);color:var(--marca);box-shadow:0 0 0 3px var(--claro)}.dev.on b{color:var(--marca)}
 .devs.auto .dev{opacity:.45}
 .seq{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:8px 0;font-size:12px;color:var(--suave)}.seq span{flex:1 1 100%}.seq button{width:30px;height:30px;border-radius:50%;border:1px solid var(--linea);background:#fff;font:600 12px inherit;cursor:pointer;color:var(--texto)}.seq button.on{background:var(--marca);color:#fff;border-color:var(--marca)}.seq button:disabled{cursor:default}
+.banco-area{margin:14px 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--lila)}
+.banco-item{display:grid;grid-template-columns:24px 44px 1fr;gap:8px;align-items:start;padding:8px 10px;border:1px solid var(--linea);border-radius:10px;margin-bottom:6px;background:#fff;text-transform:none;letter-spacing:0;font-size:13px;color:var(--texto);cursor:pointer}
+.banco-item:has(input:checked){border-color:var(--marca);background:var(--claro)}
+.banco-item b{color:var(--marca)}.banco-item small{display:block;color:var(--suave);margin-top:2px}
 .modos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .modo{display:block;border:1.5px solid var(--linea);border-radius:14px;padding:14px 16px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:13px;color:var(--suave);margin:0}
 .modo input{margin-right:8px}.modo b{color:var(--marca);font-size:15px}.modo span{display:block;margin-top:6px;line-height:1.5}
@@ -152,7 +156,7 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
     <div style="grid-column:1/-1"><label>Versión del prototipo</label><div class="devs" role="radiogroup" aria-label="Versión del prototipo"><button type="button" class="dev" role="radio" aria-checked="false" data-dev="escritorio"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="8" width="38" height="25" rx="3"/><path d="M18 40h12M24 33v7"/></svg><b>Escritorio</b><span>1920 px</span></button><button type="button" class="dev" role="radio" aria-checked="false" data-dev="tablet"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="5" width="28" height="38" rx="4"/><path d="M21 38h6"/></svg><b>Tablet</b><span>1024 px</span></button><button type="button" class="dev" role="radio" aria-checked="false" data-dev="movil"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="15" y="5" width="18" height="38" rx="4"/><path d="M22 9h4M22 38h4"/></svg><b>Celular</b><span>390 px</span></button></div><label class="chk" style="margin-top:10px"><input type="checkbox" id="cDevAuto">Elegir sola según la pantalla del participante (menos de 768 px: celular · hasta 1279: tablet · más: escritorio)</label><select id="cDev" hidden><option value="auto">Automático</option><option value="escritorio">Escritorio (1920)</option><option value="tablet">Tablet (1024)</option><option value="movil">Móvil (390)</option></select></div>
     <div style="grid-column:1/-1"><label>Transcripción de voz</label><select id="cVoz"><option value="es-CL">Activada · español (Chile)</option><option value="es-ES">Activada · español (España)</option><option value="">Desactivada</option></select><p class="help">Usa el reconocimiento de voz de Chrome (servidores de Google). No se guarda audio, solo texto. Inclúyelo en el consentimiento.</p><button type="button" class="btn sec" id="bMicTest" style="margin-top:8px">Probar micrófono y transcripción</button><div class="micst" id="micSt"></div></div>
   </div>
-  <div class="card">
+  <div class="card" id="cardPart">
     <h3 style="margin-bottom:12px">Participante</h3>
     <div class="grid2">
       <div><label>Nombre o alias</label><input type="text" id="pAlias" value="P1"></div>
@@ -161,8 +165,14 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
       <div><label>Familiaridad tecnológica</label><select id="pTec"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>
     </div>
   </div>
+  <div class="card" id="cardPartRem" style="display:none"><h3 style="margin-bottom:6px">Participante</h3><p class="help" style="margin:0">En modo remoto, el participante escribe sus datos (alias, edad, ocupación, familiaridad con la tecnología y experiencia con el enoturismo) al abrir el link. Aparecen en el registro y en su ficha.</p></div>
   <div class="card tasks">
-    <h3 style="margin-bottom:12px">Tareas (2 a 3 escenarios)</h3>
+    <div class="row" style="justify-content:space-between;margin:0 0 12px"><h3 style="margin:0">Tareas (2 a 3 escenarios)</h3><button class="btn sec" id="bBanco" type="button">Banco de tareas (<span id="nBanco">0</span>)</button></div>
+    <div id="banco" hidden>
+      <p class="help">Todas las tareas que se pueden hacer en el prototipo, por sección. Marca las que quieras usar (la pauta pide 2 o 3) y presiona "Usar seleccionadas". ★ = recomendadas para la EVA 3.2. "Se marca a mano" = no hay pantalla que la confirme sola.</p>
+      <div id="bancoLista"></div>
+      <div class="row" style="margin:12px 0"><button class="btn" id="bancoUsar" type="button">Usar seleccionadas</button><button class="btn sec" id="bancoCerrar" type="button">Cerrar</button><span class="help" id="bancoSel"></span></div>
+    </div>
     <div id="taskEd"></div>
     <p class="help">Columnas: número, escenario (lo que lee el participante), criterio (solo para ti) y <b>pantalla de éxito</b>: cuando el participante llega a esa pantalla, la tarea se marca sola como completada (en móvil se usa la pantalla equivalente).</p>
   </div>
@@ -242,6 +252,7 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
 <div id="heatBig" class="heatbig" hidden><div class="hbhead"><b id="hbTitle">Mapa de calor</b><span class="sp"></span><span id="hbStats" class="hstats" style="margin:0"></span><button class="btn light" id="bHeatClose">Cerrar ✕</button></div><div class="hbbody" id="hbBody"><canvas id="hbCanvas"></canvas></div></div>
 <script src="mapa.js"></script>
 <script src="pantallas.js"></script>
+<script src="tareas.js"></script>
 <script src="calor.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
@@ -279,7 +290,8 @@ Object.entries({...EQUIV}).forEach(([a,b])=>EQUIV[b]=EQUIV[b]||a);
 const M2T={"685:5845":"734:9133","685:5846":"734:9364","685:5847":"734:9522","685:5848":"734:9820","685:5849":"734:9901","725:7551":"734:9943","725:7630":"734:10005","725:7704":"734:10068","685:5850":"734:10133","709:9321":"734:10149","685:5985":"734:10165","685:5884":"734:10178","685:5906":"734:10190","685:5929":"734:10211","685:5953":"734:10224","685:5965":"734:10234","685:6012":"734:10250","686:6004":"734:10257","686:6011":"734:10277","706:9549":"734:10286","706:9561":"734:10295","709:9373":"734:10304","723:7391":"734:10313","723:7400":"734:10322"};
 const exitoIds=t=>{if(!t.exito)return [];const m=EQUIV[t.exito];return [t.exito,m,m&&M2T[m],M2T[t.exito]].filter(Boolean)};
 const opcionesExito=sel=>'<option value="">— sin pantalla de éxito —</option>'+Object.entries(M.S).filter(([id,n])=>!/^(Móvil|Tablet)/.test(n)).map(([id,n])=>`<option value="${id}"${id===sel?' selected':''}>${esc(n)}</option>`).join('');
-function renderTaskEditor(){const saved=JSON.parse(store.get('sala.tareas')||'null')||TAREAS_DEF;$('#taskEd').innerHTML=saved.map((t,i)=>`<div class="t"><input type="text" value="${esc(t.id)}" data-i="${i}" data-k="id"><textarea data-i="${i}" data-k="escenario">${esc(t.escenario)}</textarea><textarea data-i="${i}" data-k="criterio">${esc(t.criterio)}</textarea><select data-i="${i}" data-k="exito" title="Pantalla de éxito">${opcionesExito(t.exito!==undefined?t.exito:(EXITO_DEF[t.id]||''))}</select></div>`).join('')}
+function tareasDef(){const B=window.BANCO||[];const r=(window.BANCO_RECOMENDADAS||[]).map(id=>B.find(t=>t.id===id)).filter(Boolean);return r.length?r.map(t=>({id:t.id,escenario:t.escenario,criterio:t.criterio,exito:t.exito||''})):TAREAS_DEF}
+function renderTaskEditor(){const saved=JSON.parse(store.get('sala.tareas')||'null')||tareasDef();$('#taskEd').innerHTML=saved.map((t,i)=>`<div class="t"><input type="text" value="${esc(t.id)}" data-i="${i}" data-k="id"><textarea data-i="${i}" data-k="escenario">${esc(t.escenario)}</textarea><textarea data-i="${i}" data-k="criterio">${esc(t.criterio)}</textarea><select data-i="${i}" data-k="exito" title="Pantalla de éxito">${opcionesExito(t.exito!==undefined?t.exito:(EXITO_DEF[t.id]||''))}</select></div>`).join('')}
 function readTasks(){const arr=[];document.querySelectorAll('#taskEd .t').forEach(row=>{const o={};row.querySelectorAll('[data-k]').forEach(el=>o[el.dataset.k]=el.value.trim());if(o.id&&o.escenario)arr.push(o)});store.set('sala.tareas',JSON.stringify(arr));return arr}
 renderTaskEditor();
 // Client ID del equipo: se usa siempre por defecto (no es secreto). Cambiarlo aquí si se crea otra app.
@@ -294,6 +306,17 @@ $('#bCopyCid').onclick=async()=>{const v=$('#cCid').value.trim();if(!v){$('#cidM
 $('#bApplyCid').onclick=()=>{if(!S||S.demo)return;S.figma=false;mountStage();ev('moderador',{texto:'Prototipo recargado con otro Client ID'});$('#bApplyCid').style.display='none'};
 if(store.get('sala.url'))$('#cUrl').value=store.get('sala.url');
 
+/* ================= banco de tareas ================= */
+function renderBanco(){const B=window.BANCO||[];$('#nBanco').textContent=B.length;const rec=new Set(window.BANCO_RECOMENDADAS||[]);const act=new Set((JSON.parse(store.get('sala.tareas')||'null')||tareasDef()).map(t=>t.id));
+  let html='',area='';for(const t of B){if(t.area!==area){area=t.area;html+=`<div class="banco-area">${esc(area)}</div>`}
+    html+=`<label class="banco-item"><input type="checkbox" value="${esc(t.id)}" ${act.has(t.id)?'checked':''}><b>${esc(t.id)}${rec.has(t.id)?' ★':''}</b><span>${esc(t.escenario)}<small>Éxito: ${esc(t.criterio)} · ${t.exito?'se marca sola al llegar a '+esc(nombrePantalla(t.exito)):'se marca a mano'} · Ruta: ${esc(t.ruta)} · Perfil: ${esc(t.perfil)}</small></span></label>`}
+  $('#bancoLista').innerHTML=html;contarSel()}
+function contarSel(){const n=document.querySelectorAll('#bancoLista input:checked').length;$('#bancoSel').textContent=n+' seleccionada(s)'+(n>3?' · la pauta pide 2 o 3':'')}
+$('#bancoLista').addEventListener('change',contarSel);
+$('#bBanco').onclick=()=>{const b=$('#banco');b.hidden=!b.hidden;if(!b.hidden)renderBanco()};
+$('#bancoCerrar').onclick=()=>{$('#banco').hidden=true};
+$('#bancoUsar').onclick=()=>{const ids=[...document.querySelectorAll('#bancoLista input:checked')].map(i=>i.value);if(!ids.length)return;const B=window.BANCO||[];const arr=ids.map(id=>B.find(t=>t.id===id)).map(t=>({id:t.id,escenario:t.escenario,criterio:t.criterio,exito:t.exito||''}));store.set('sala.tareas',JSON.stringify(arr));renderTaskEditor();$('#banco').hidden=true};
+setTimeout(()=>{$('#nBanco').textContent=(window.BANCO||[]).length},0);
 /* ================= versión del prototipo (3 tarjetas) ================= */
 function devUI(){const v=$('#cDev').value,auto=v==='auto';$('#cDevAuto').checked=auto;$('.devs').classList.toggle('auto',auto);
   document.querySelectorAll('.dev').forEach(b=>{const on=!auto&&b.dataset.dev===v;b.classList.toggle('on',on);b.setAttribute('aria-checked',on)})}
@@ -308,7 +331,7 @@ let S=null;let timer=null;let demoTimer=null;let lastClick=null;let lastActivity
 function newSession(demo){
   let dev=$('#cDev').value;if(dev==='auto'&&!(!demo&&modoActual()==='remota'))dev=devAuto();
   S={version:1,demo:!!demo,inicio:Date.now(),dispositivo:dev,
-     remoto:!demo&&modoActual()==='remota',participante:{alias:$('#pAlias').value.trim()||'P?',perfil:$('#pPerfil').value.trim(),tecnologia:$('#pTec').value,modalidad:(!demo&&modoActual()==='remota')?'Remota en vivo (link, sin moderación presencial)':$('#pMod').value,fecha:new Date().toLocaleString('es-CL')},
+     remoto:!demo&&modoActual()==='remota',participante:{alias:(!demo&&modoActual()==='remota')?'Participante':($('#pAlias').value.trim()||'P?'),perfil:$('#pPerfil').value.trim(),tecnologia:$('#pTec').value,modalidad:(!demo&&modoActual()==='remota')?'Remota en vivo (link, sin moderación presencial)':$('#pMod').value,fecha:new Date().toLocaleString('es-CL')},
      tareas:readTasks().map(t=>({...t,inicio:null,fin:null,resultado:null})),
      actual:null,pantalla:null,eventos:[],voz:[],marcas:[],calor:[],figma:false,respaldo:false,id:'s'+Date.now()};
 }
@@ -464,7 +487,7 @@ function begin(demo){
   if(demo)runDemo();
 }
 $('#bStart').onclick=()=>{if(!$('#cCid').value.trim()&&!confirm('Sin Client ID, Figma no enviará avisos. ¿Iniciar igual?'))return;begin(false)};
-function modoUI(){const r=modoActual()==='remota';$('#bStart').textContent=r?'Crear link para el participante':'Iniciar sesión';
+function modoUI(){const r=modoActual()==='remota';$('#cardPart').style.display=r?'none':'';$('#cardPartRem').style.display=r?'':'none';$('#bStart').textContent=r?'Crear link para el participante':'Iniciar sesión';
   $('#modoHelp').textContent=r?'El participante necesita Chrome en computador. Tu pestaña debe quedar abierta durante el test. No se graba video ni audio: solo ves en vivo; se guarda el registro en texto.':'';}
 document.querySelectorAll('input[name=modo]').forEach(i=>i.onchange=modoUI);modoUI();
 $('#bDemo').onclick=()=>begin(true);
@@ -656,6 +679,7 @@ function onRemoto(m){if(!S||!m||typeof m!=='object')return;
     if(m.accion==='inicio'){if(S.actual&&S.actual!==tk.id){const c=S.tareas.find(t=>t.id===S.actual);if(c&&!c.fin){c.fin=now();c.resultado=c.resultado||'Sin cerrar'}}tk.inicio=now();tk.fin=null;tk.resultado=null;S.actual=tk.id;ev('moderador',{texto:'Inicio '+tk.id+' (participante)'})}
     else{tk.fin=now();tk.resultado=m.resultado;ev('moderador',{texto:tk.id+' · '+m.resultado+(m.auto?' (llegó a la pantalla de éxito)':' (lo indicó el participante)')});S.actual=null}
     renderTasks();return}
+  if(m.k==='perfil'&&m.datos){const d=m.datos,p=S.participante;p.alias=(d.alias||'Participante').slice(0,40);p.perfil=[d.edad?d.edad+' años':'',d.ocupacion,d.enoturismo?'enoturismo: '+d.enoturismo.toLowerCase():''].filter(Boolean).join(' · ');p.tecnologia=d.tecnologia||p.tecnologia;ev('sistema',{texto:'Datos del participante: '+p.alias+(p.perfil?' · '+p.perfil:'')+' · tecnología '+(p.tecnologia||'').toLowerCase()});return}
   if(m.k==='seq'){const tk=S.tareas.find(t=>t.id===m.id);if(tk){tk.seq=m.valor;tk.seqComentario=m.comentario||'';ev('voz',{texto:'['+tk.id+' · facilidad '+m.valor+'/7]'+(m.comentario?' '+m.comentario:'')});renderTasks()}return}
   if(m.k==='fin'){ev('sistema',{texto:'El participante terminó todas las tareas'});const a=$('#avisoFin');a.style.display='block';a.innerHTML='<b>El participante terminó.</b> Presiona "Terminar sesión" para ver la ficha, la matriz y el mapa de calor.';return}
 }
