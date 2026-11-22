@@ -154,7 +154,7 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
 #banco{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(920px,calc(100vw - 24px));height:min(82dvh,780px);z-index:50;background:#fff;border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;box-shadow:0 0 0 100vmax rgba(24,20,40,.45),0 20px 60px rgba(0,0,0,.3)}#banco[hidden]{display:none}
 .bancoIn{display:flex;flex-direction:column;min-height:0;flex:1}#bancoLista{flex:1;min-height:0;overflow:auto}
 #modoHelp:empty,.micst:empty{display:none}.pasos{display:none}.corto{display:none}.cid .lnkcorto{display:none}
-@media (max-width:1180px){.grid4{grid-template-columns:1fr 1fr}.tcols,.setup .tasks .t{grid-template-columns:44px 1fr 1fr 150px}}
+@media (max-width:1180px){.setup .tasks .t textarea{max-height:78px;font-size:12.5px}.grid4{grid-template-columns:1fr 1fr}.tcols,.setup .tasks .t{grid-template-columns:44px 1fr 1fr 150px}}
 @media (max-width:899px){
  .setup{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"pasos" "sec" "acc";padding:10px 12px;gap:10px}
  .pasos{display:flex;grid-area:pasos;background:#fff;border:1px solid var(--linea);border-radius:999px;padding:3px}.pasos button{flex:1;border:0;background:none;border-radius:999px;padding:8px 4px;font-size:12px;color:var(--suave);font-weight:500}.pasos button.on{background:var(--marca);color:#fff}
