@@ -1,6 +1,13 @@
 // Mapa de calor de clics sobre el esquema de cada pantalla (window.PANTALLAS).
 // Cada punto: {s: pantalla, x, y (relativos al frame que se hace scroll), ox, oy (scroll), sf (frame del scroll), ok (tuvo respuesta), t, tarea}
 window.Calor = (function () {
+  // Imágenes reales de cada pantalla (pantallas/<id>.jpg). Si no existe, se usa el esquema.
+  const IMG = {}, FALTA = {};
+  function imagen(id, alListo) {
+    if (FALTA[id]) return null; if (IMG[id] && IMG[id].complete && IMG[id].naturalWidth) return IMG[id];
+    if (!IMG[id]) { const im = new Image(); im.onload = () => alListo && alListo(); im.onerror = () => { FALTA[id] = 1; alListo && alListo() }; im.src = 'pantallas/' + String(id).replace(/:/g, '-') + '.jpg'; IMG[id] = im }
+    return null;
+  }
   function desde(d, extra) {
     const p = d.nearestScrollingFrameMousePosition, o = d.nearestScrollingFrameOffset || { x: 0, y: 0 };
     return Object.assign({
@@ -28,7 +35,8 @@ window.Calor = (function () {
     g.fillStyle = gr; g.fillRect(0, 0, 256, 1); return g.getImageData(0, 0, 256, 1).data;
   })();
   function render(canvas, screenId, puntos, opt) {
-    opt = Object.assign({ ancho: canvas.parentElement ? canvas.parentElement.clientWidth : 380, sumarScroll: true, soloFallidos: false, nombres: true }, opt || {});
+    opt = Object.assign({ ancho: canvas.parentElement ? canvas.parentElement.clientWidth : 380, sumarScroll: true, soloFallidos: false, nombres: true, opacidad: 0.4 }, opt || {});
+    const img = imagen(screenId, () => { if (!canvas.__re) { canvas.__re = 1; setTimeout(() => { canvas.__re = 0; render(canvas, screenId, puntos, opt) }, 0) } });
     const P = (window.PANTALLAS || {})[screenId];
     const w = P ? P.w : 1920, h = P ? P.h : 1080;
     const W = Math.max(200, opt.ancho), k = W / w, H = Math.round(h * k), dpr = window.devicePixelRatio || 1;
@@ -36,7 +44,8 @@ window.Calor = (function () {
     const g = canvas.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.fillStyle = '#faf7f2'; g.fillRect(0, 0, W, H);
     g.font = '10px Poppins, system-ui, sans-serif'; g.textBaseline = 'top';
-    if (P) {
+    if (img) { g.globalAlpha = opt.opacidad; g.drawImage(img, 0, 0, W, H); g.globalAlpha = 1 }
+    else if (P) {
       for (const [x, y, ww, hh, n] of P.s) { g.fillStyle = '#efe9e1'; g.strokeStyle = '#d9d0c4'; g.lineWidth = 1; g.fillRect(x * k, y * k, ww * k, hh * k); g.strokeRect(x * k + .5, y * k + .5, ww * k - 1, hh * k - 1); if (opt.nombres) { g.fillStyle = '#6f6860'; g.font = (W > 700 ? '600 13px' : '600 10px') + ' Poppins, system-ui, sans-serif'; g.fillText(n, x * k + 6, y * k + 4) } }
     }
     const pts = puntos.filter(p => p.s === screenId && (!opt.soloFallidos || !p.ok) && (!opt.tarea || p.tarea === opt.tarea));
@@ -48,7 +57,9 @@ window.Calor = (function () {
       for (const [x, y, ww, hh, n] of P.k) {
         const c = xy.filter(o => o.q.x >= x && o.q.x <= x + ww && o.q.y >= y && o.q.y <= y + hh).length;
         hits.push({ n, c });
-        g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(x * k, y * k, Math.max(2, ww * k), Math.max(2, hh * k)); g.strokeStyle = c ? 'rgba(61,55,106,.9)' : 'rgba(61,55,106,.45)'; g.lineWidth = 1; g.strokeRect(x * k + .5, y * k + .5, Math.max(2, ww * k - 1), Math.max(2, hh * k - 1));
+        if (!img) { g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(x * k, y * k, Math.max(2, ww * k), Math.max(2, hh * k)) }
+        if (img && !c) continue;
+        g.strokeStyle = c ? 'rgba(61,55,106,.9)' : 'rgba(61,55,106,.45)'; g.lineWidth = 1; g.strokeRect(x * k + .5, y * k + .5, Math.max(2, ww * k - 1), Math.max(2, hh * k - 1));
       }
       g.setLineDash([]);
     }
