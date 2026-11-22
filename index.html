@@ -110,7 +110,9 @@ td[contenteditable]{background:#fffdf7}
 .chk{display:inline-flex;align-items:center;gap:4px;text-transform:none;letter-spacing:0;font-size:12px;margin:0;color:var(--texto)}
 .hstats{font-size:12px;color:var(--suave);margin-bottom:8px}
 .hwrap{border:1px solid var(--linea);border-radius:10px;overflow:auto;max-height:70vh;background:#faf7f2}
-.hwrap canvas{display:block}
+.hwrap,.hbbody{position:relative}.hwrap canvas,.hbbody canvas{display:block;position:relative;z-index:1}
+iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:0;background:#fff}
+.hbbody{align-items:flex-start}
 .heatbig{position:fixed;inset:0;z-index:50;background:#16131f;display:flex;flex-direction:column;padding:16px}
 .heatbig[hidden]{display:none}
 .hbhead{display:flex;align-items:center;gap:12px;color:#fff;padding:0 4px 12px;flex-wrap:wrap}.hbhead .sp{flex:1}.hbhead .hstats{color:#cfcbe0}
@@ -369,7 +371,7 @@ function onRespaldo(d){
 window.addEventListener('message',e=>{
   const d=e.data;if(!d||typeof d!=='object')return;
   if(d.source==='sala-respaldo'&&/figma\.com$/.test(new URL(e.origin).hostname))return onRespaldo(d);
-  if((e.origin==='https://www.figma.com'||e.origin==='https://embed.figma.com')&&d.type)return onFigma(d.type,d.data||{});
+  if((e.origin==='https://www.figma.com'||e.origin==='https://embed.figma.com')&&d.type){const f=$('#fig');if(document.querySelector('iframe.fondo')&&(!f||e.source!==f.contentWindow))return;return onFigma(d.type,d.data||{})}
 });
 function updateNow(){$('#now').innerHTML='Pantalla actual: <b>'+esc(nombrePantalla(S.pantalla))+'</b>'}
 
@@ -572,6 +574,18 @@ $('#dlComb').onclick=()=>download('matriz-consolidada.csv',csv(tableRows('#tComb
 function exitoLocal(id){if(!S||S.remoto||!S.actual)return;const tk=S.tareas.find(t=>t.id===S.actual);if(!tk||!exitoIds(tk).includes(id))return;tk.fin=now();tk.resultado='Completada';ev('moderador',{texto:tk.id+' · Completada (llegó a '+nombrePantalla(id)+')'});S.actual=null;renderTasks()}
 
 /* ================= mapa de calor ================= */
+// Fondo: el prototipo real de esa pantalla, en vivo y aclarado, debajo del calor (sin client-id: no envía avisos)
+function urlFondo(id){const raw=$('#cUrl').value.trim()||store.get('sala.url')||'';let u;try{u=new URL(raw)}catch(e){return null}const m=u.pathname.match(/\/proto\/([^/]+)\/?([^/]*)/);if(!m)return null;
+  const P=(window.PANTALLAS||{})[id];const movil=P&&P.w<500;
+  const q=new URLSearchParams({'node-id':String(id).replace(':','-'),'starting-point-node-id':id,'scaling':'scale-down-width','content-scaling':'fixed','hide-ui':'1','embed-host':'sala-de-test-fondo'});
+  return `https://embed.figma.com/proto/${m[1]}/${m[2]||'prototipo'}?${q}`}
+function pintarCalor(canvas,id,pts,opt){const src=urlFondo(id);const r=Calor.render(canvas,id,pts,{...opt,transparente:!!src});
+  const wrap=canvas.parentElement;let fr=wrap.querySelector('iframe.fondo');
+  if(!src){if(fr)fr.remove();return r}
+  if(!fr){fr=document.createElement('iframe');fr.className='fondo';fr.setAttribute('tabindex','-1');fr.setAttribute('aria-hidden','true');wrap.insertBefore(fr,canvas)}
+  if(fr.dataset.id!==id){fr.dataset.id=id;fr.src=src}
+  fr.style.left=canvas.offsetLeft+'px';fr.style.top=canvas.offsetTop+'px';fr.style.width=canvas.style.width;fr.style.height=canvas.style.height;
+  return r}
 function heatSelect(sel,pts,pref){const m=window.Calor?Calor.pantallasCon(pts):{};const ids=Object.keys(m).sort((a,b)=>m[b]-m[a]);if(pref&&!ids.includes(pref)&&window.PANTALLAS&&PANTALLAS[pref])ids.unshift(pref);
   const cur=$(sel).value;$(sel).innerHTML=ids.length?ids.map(id=>`<option value="${id}">${esc(nombrePantalla(id))} · ${m[id]||0} clics</option>`).join(''):'<option value="">Aún no hay clics</option>';
   if(ids.includes(cur))$(sel).value=cur;else if(pref&&ids.includes(pref))$(sel).value=pref}
@@ -583,19 +597,19 @@ function renderHeat(force){if(!S||!window.Calor)return;if(!$('#pCalor').classLis
   if($('#hFollow').checked){const ult=S.calor.length?S.calor[S.calor.length-1].s:null;heatT._sel=(S.pantalla&&cnt[S.pantalla])?S.pantalla:(ult||S.pantalla)}
   heatSelect('#hScr',S.calor,null);if(heatT._sel&&[...$('#hScr').options].some(o=>o.value===heatT._sel))$('#hScr').value=heatT._sel;
   const id=$('#hScr').value;if(!id){$('#hStats').textContent='Los clics aparecen aquí apenas el participante empieza a usar el prototipo.';return}
-  const r=Calor.render($('#hCanvas'),id,S.calor,{ancho:$('#pCalor').clientWidth-34,soloFallidos:$('#hFail').checked,sumarScroll:$('#hScroll').checked});$('#hStats').textContent=statsTxt(r)+' En total: '+S.calor.length+' clics en '+Object.keys(Calor.pantallasCon(S.calor)).length+' pantalla(s).';$('#hZonas').innerHTML=zonasTxt(r);
+  const r=pintarCalor($('#hCanvas'),id,S.calor,{ancho:$('#pCalor').clientWidth-34,soloFallidos:$('#hFail').checked,sumarScroll:$('#hScroll').checked});$('#hStats').textContent=statsTxt(r)+' En total: '+S.calor.length+' clics en '+Object.keys(Calor.pantallasCon(S.calor)).length+' pantalla(s).';$('#hZonas').innerHTML=zonasTxt(r);
   // baja hasta el último clic de esta pantalla
   const P=(window.PANTALLAS||{})[id];const last=[...S.calor].reverse().find(p=>p.s===id);if(P&&last){const q=Calor.pos(last,$('#hScroll').checked);if(q){const k=$('#hCanvas').clientWidth/P.w;const w=$('#hWrap');w.scrollTop=Math.max(0,q.y*k-w.clientHeight/2)}}
   if(!$('#heatBig').hidden)renderBig()}
 function renderBig(){const id=$('#hScr').value;if(!id)return;$('#hbTitle').textContent='Mapa de calor · '+nombrePantalla(id);const P=(window.PANTALLAS||{})[id];const body=$('#hbBody');const ancho=Math.min(body.clientWidth-24,P&&P.w<800?520:1200);
-  const r=Calor.render($('#hbCanvas'),id,S.calor,{ancho,soloFallidos:$('#hFail').checked,sumarScroll:$('#hScroll').checked});$('#hbStats').textContent=statsTxt(r)}
+  const r=pintarCalor($('#hbCanvas'),id,S.calor,{ancho,soloFallidos:$('#hFail').checked,sumarScroll:$('#hScroll').checked});$('#hbStats').textContent=statsTxt(r)}
 $('#bHeatBig').onclick=()=>{$('#heatBig').hidden=false;renderBig()};$('#bHeatClose').onclick=()=>{$('#heatBig').hidden=true};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#heatBig').hidden)$('#heatBig').hidden=true});
 ['#hScr','#hFail','#hScroll'].forEach(s=>$(s).addEventListener('change',()=>{if(s==='#hScr')$('#hFollow').checked=false;renderHeat(true)}));$('#hFollow').onchange=()=>renderHeat(true);
-function dibujarS(){if(!window.Calor||!S)return;const id=$('#sScr').value;if(!id){$('#sStats').textContent='Esta sesión no tiene clics con posición.';return}const r=Calor.render($('#sCanvas'),id,S.calor,{ancho:Math.min(1000,$('#sCanvas').parentElement.clientWidth||900),soloFallidos:$('#sFail').checked,sumarScroll:$('#sScroll').checked});$('#sStats').textContent=statsTxt(r);$('#sZonas').innerHTML=zonasTxt(r)}
+function dibujarS(){if(!window.Calor||!S)return;const id=$('#sScr').value;if(!id){$('#sStats').textContent='Esta sesión no tiene clics con posición.';return}const r=pintarCalor($('#sCanvas'),id,S.calor,{ancho:Math.min(1000,$('#sCanvas').parentElement.clientWidth||900),soloFallidos:$('#sFail').checked,sumarScroll:$('#sScroll').checked});$('#sStats').textContent=statsTxt(r);$('#sZonas').innerHTML=zonasTxt(r)}
 ['#sScr','#sFail','#sScroll'].forEach(s=>$(s).addEventListener('change',dibujarS));
 let CALORC=[];
-function dibujarC(){if(!window.Calor)return;const id=$('#cScr').value;if(!id){$('#cStats').textContent='Las sesiones cargadas no tienen clics con posición.';return}const r=Calor.render($('#cCanvas'),id,CALORC,{ancho:Math.min(1000,$('#cCanvas').parentElement.clientWidth||900),soloFallidos:$('#cFail').checked,sumarScroll:$('#cScroll').checked});$('#cStats').textContent=statsTxt(r)+' Suma de todas las sesiones cargadas.';$('#cZonas').innerHTML=zonasTxt(r)}
+function dibujarC(){if(!window.Calor)return;const id=$('#cScr').value;if(!id){$('#cStats').textContent='Las sesiones cargadas no tienen clics con posición.';return}const r=pintarCalor($('#cCanvas'),id,CALORC,{ancho:Math.min(1000,$('#cCanvas').parentElement.clientWidth||900),soloFallidos:$('#cFail').checked,sumarScroll:$('#cScroll').checked});$('#cStats').textContent=statsTxt(r)+' Suma de todas las sesiones cargadas.';$('#cZonas').innerHTML=zonasTxt(r)}
 ['#cScr','#cFail','#cScroll'].forEach(s=>$(s).addEventListener('change',dibujarC));
 const pngDe=(cv,nombre)=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nombre;a.click()});
 $('#dlCalor').onclick=()=>pngDe($('#sCanvas'),`calor-${S.participante.alias}-${(nombrePantalla($('#sScr').value)).replace(/[^\wáéíóúñ]+/gi,'-')}.png`);
