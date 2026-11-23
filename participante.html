@@ -56,6 +56,7 @@ button{font:inherit;cursor:pointer}
 @media (max-height:700px) and (max-width:600px){.bien .intro ul li:nth-child(n+2){display:none}.tarjeta h1{font-size:18px}.tarjeta p{font-size:13px}.datos label{margin-top:5px}.datos input,.datos select{padding:7px 9px}}
 .punto{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e04646;margin-right:6px;animation:p 1.6s infinite}
 @keyframes p{50%{opacity:.3}}
+.eno{background:#f3f0fa;border-radius:12px;padding:12px 14px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -64,7 +65,8 @@ button{font:inherit;cursor:pointer}
 <div class="capa" id="cBien"><div class="tarjeta bien"><div class="intro">
   <h2>Prueba de prototipo</h2>
   <h1>Hola 👋 Gracias por ayudarnos</h1>
-  <p>Vas a probar el prototipo de un sitio de enoturismo. Te daremos <b id="nT">3</b> tareas cortas. No hay respuestas correctas: estamos probando el diseño, no a ti.</p>
+  <p class="eno"><b>¿Qué es el enoturismo?</b> Es viajar para conocer el mundo del vino: visitar viñas y valles, hacer catas y recorridos por los viñedos, y participar en fiestas de la vendimia, la época de la cosecha de la uva.</p>
+  <p>Vas a probar el prototipo de un sitio que reúne estas experiencias en Chile. Te daremos <b id="nT">3</b> tareas cortas. No hay respuestas correctas: estamos probando el diseño, no a ti.</p>
   <ul>
     <li>Piensa en voz alta: di lo que buscas, lo que esperas y lo que te confunde.</li>
     <li>Quien modera verá en vivo esta pestaña, escuchará tu voz y verá tus clics.</li>
@@ -133,6 +135,7 @@ function b64d(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='='
 // El link trae solo el código de la sesión (#s=eno-xxxx). La configuración (prototipo, tareas) la envía la sala al conectar.
 // También acepta el formato antiguo con toda la configuración (#c=…).
 let CFG=null,SID=null;
+window.addEventListener('hashchange',()=>location.reload());
 try{const m=location.hash.match(/c=([^&]+)/);if(m){CFG=JSON.parse(b64d(m[1]));SID=CFG.peer}}catch(e){}
 if(!SID){const m=(location.hash+'&'+location.search).match(/[#&?]s=([A-Za-z0-9_-]+)/);if(m)SID=m[1]}
 // versión del prototipo según la pantalla: menos de 768 px → móvil (390); 768 a 1279 → tablet (1024); 1280 o más → escritorio (1920)
@@ -145,6 +148,7 @@ $('#cod').addEventListener('keydown',e=>{if(e.key==='Enter')$('#bCod').click()})
 
 const esChrome=/Google Chrome|Microsoft Edge/.test(((navigator.userAgentData&&navigator.userAgentData.brands)||[]).map(b=>b.brand).join(' '))||(!navigator.userAgentData&&/Chrome\//.test(navigator.userAgent));
 const esMovil=/Android|iPhone|iPad/i.test(navigator.userAgent);
+const esTactil=(navigator.maxTouchPoints||0)>0&&matchMedia('(pointer: coarse)').matches;
 if(SID&&(!esChrome||esMovil))$('#estBien').textContent=esMovil?'Estás en un celular o tablet: podrás hacer las tareas, pero no compartir la pantalla.':'Te recomendamos usar Google Chrome para que todo funcione.';
 const okForm=()=>{$('#bConectar').disabled=!($('#acepto').checked&&$('#dAlias').value.trim())};$('#acepto').onchange=okForm;$('#dAlias').addEventListener('input',okForm);
 const datos=()=>({alias:$('#dAlias').value.trim(),edad:$('#dEdad').value,ocupacion:$('#dOcu').value.trim(),tecnologia:$('#dTec').value,enoturismo:$('#dEno').value});
@@ -156,13 +160,13 @@ function conectar(){return new Promise((res,rej)=>{
   peer=new Peer({debug:1});
   const to=setTimeout(()=>rej(new Error('tiempo')),15000);
   peer.on('open',()=>{conn=peer.connect(SID,{reliable:true});
-    conn.on('open',()=>{clearTimeout(to);listo=true;enviar({k:'hola',dev:CFG?CFG.dev:null,nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')});while(cola.length)conn.send(cola.shift());res()});
+    conn.on('open',()=>{clearTimeout(to);listo=true;enviar({k:'hola',dev:CFG?CFG.dev:null,tactil:esTactil,nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')+(esTactil?' · pantalla táctil':'')});while(cola.length)conn.send(cola.shift());res()});
     conn.on('data',onMod);conn.on('close',()=>{listo=false;toast('<b>Se perdió la conexión con quien modera.</b> Puedes seguir; intentaremos reconectar.');setTimeout(reconectar,3000)})});
   peer.on('error',e=>{if(e.type==='peer-unavailable'){clearTimeout(to);rej(new Error('nomod'))}else if(!listo){clearTimeout(to);rej(e)}});
 })}
 function reconectar(){if(listo||!peer||peer.destroyed)return;try{conn=peer.connect(SID,{reliable:true});conn.on('open',()=>{listo=true;while(cola.length)conn.send(cola.shift());if(stream)peer.call(SID,stream);toast('Conexión recuperada.')});conn.on('data',onMod);conn.on('close',()=>{listo=false;setTimeout(reconectar,4000)})}catch(e){setTimeout(reconectar,4000)}}
 function onMod(m){if(!m)return;
-  if(m.k==='config'&&m.cfg){const primera=!CFG;CFG=m.cfg;prepararCfg();if(primera&&listo)enviar({k:'hola',dev:CFG.dev,nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')});cfgRes();return}
+  if(m.k==='config'&&m.cfg){const primera=!CFG;CFG=m.cfg;prepararCfg();if(primera&&listo)enviar({k:'hola',dev:CFG.dev,tactil:esTactil,nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')+(esTactil?' · pantalla táctil':'')});cfgRes();return}
   if(m.k==='msg')toast('<b>Mensaje:</b> '+String(m.texto).replace(/[<>&]/g,''));
   if(m.k==='restart'){reiniciar();toast('El prototipo volvió al inicio.')}
   if(m.k==='ocupado'){$('#errT').textContent='Esta sesión ya está en uso';$('#errP').textContent='Pídele a quien te envió el link uno nuevo.';show('#cErr',true)}
@@ -195,11 +199,11 @@ function embedUrl(){let u;try{u=new URL(CFG.url)}catch(e){return null}const m=u.
   const st=String(CFG.inicio||u.searchParams.get('node-id')||'');
   const q=new URLSearchParams({'node-id':st.replace(':','-'),'starting-point-node-id':st.replace('-',':'),'embed-host':'sala-de-test','client-id':CFG.cid||'','scaling':'scale-down-width','content-scaling':'fixed','hide-ui':'1'});
   return `https://embed.figma.com/proto/${m[1]}/${m[2]||'prototipo'}?${q}`}
-let fig=null,figOk=false;
+let fig=null,figOk=false;const FTIP={};setInterval(()=>{if(Object.keys(FTIP).length)enviar({k:'figmaTipos',c:FTIP})},15000);
 function montar(){const e=$('#escena');e.className='on'+(CFG.dev==='movil'?' movil':'');fig=document.createElement('iframe');fig.src=embedUrl();fig.allow='fullscreen';e.appendChild(fig);
   setTimeout(()=>{if(!figOk)enviar({k:'estado',texto:'Figma no envía avisos desde su navegador (revisa Client ID u orígenes permitidos)'})},15000)}
 function reiniciar(){if(fig)fig.contentWindow.postMessage({type:'RESTART'},'https://embed.figma.com')}
-window.addEventListener('message',e=>{if(e.origin!=='https://www.figma.com'&&e.origin!=='https://embed.figma.com')return;const d=e.data;if(!d||!d.type)return;figOk=true;
+window.addEventListener('message',e=>{if(e.origin!=='https://www.figma.com'&&e.origin!=='https://embed.figma.com')return;const d=e.data;if(!d||!d.type)return;figOk=true;FTIP[d.type]=(FTIP[d.type]||0)+1;
   enviar({k:'figma',type:d.type,data:d.data||{}});
   if(d.type==='PRESENTED_NODE_CHANGED'&&actual!=null&&!cerrada){const tk=CFG.tareas[actual];if((tk.exito||[]).includes(d.data.presentedNodeId))terminar('Completada',true)}});
 

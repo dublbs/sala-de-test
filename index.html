@@ -669,6 +669,8 @@ function txLinea(e){const tipo=e.tipo;
 function txRec(t,ses){const rec=recorrido(t,ses);if(t.inicio!=null){let ini=null;for(const e of ses.eventos){if(e.t>t.inicio)break;if(e.tipo==='pantalla')ini=e.id}if(!ini){const f=ses.eventos.find(e=>e.tarea===t.id&&e.pantalla);ini=f&&f.pantalla}if(ini&&rec[0]!==ini)rec.unshift(ini)}return rec}
 function txProps(t,ses){const m=metricas(t,ses);return [['Resultado',esLibre(t)?'Exploración libre':(t.resultado||'Sin cerrar')],['Tiempo',m.dur!=null?fmt(m.dur):'—'],['Clics',m.clics+(m.perdidos?' ('+m.perdidos+' sin respuesta)':'')],['Pantallas',String(m.pantallas)],['Facilidad',t.seq!=null?t.seq+'/7':'—'],['Comentario',t.seqComentario?'“'+t.seqComentario+'”':'—']]}
 function renderTx(ses){TX.ses=ses;const {evs,segs}=txSegmentos(ses);TX.ev=evs;TX.i=-1;txStop();let h='',paso=0;
+  const nP=evs.filter(e=>e.tipo==='pantalla').length,nC=evs.filter(e=>e.tipo==='clic'&&e.fuente==='figma').length;
+  if(ses.tactil&&nP>2&&nC===0)h+=`<div class="warnbox" style="margin-bottom:16px"><b>Este dispositivo táctil no envió toques.</b> Figma avisó ${nP} cambios de pantalla, pero ninguna posición de toque${ses.figmaTipos?' (avisos recibidos: '+esc(Object.entries(ses.figmaTipos).map(([k,v])=>k+' '+v).join(', '))+')':''}. El recorrido por pantallas y la transcripción están completos; el mapa de calor de esta sesión queda vacío.</div>`;
   for(const g of segs){const t=g.tarea;h+='<section class="txseg">';
     if(t){h+=`<h4>${esc(esLibre(t)?'Exploración libre':t.id)}</h4><p class="txesc">${esc(t.escenario||'')}</p><dl class="txprops">${txProps(t,ses).map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join('')}</dl>`;
       const rec=txRec(t,ses),ok=new Set(exitoIds(t));if(rec.length)h+='<div class="txpath">'+rec.map((id,i)=>(i?'<span class="ar">→</span>':'')+`<span class="st${ok.has(id)?' ok':''}">${esc(nombrePantalla(id).replace(/^(Móvil|Tablet) · /,''))}</span>`).join('')+'</div>'}
@@ -843,7 +845,8 @@ function iniciarPeer(){
 function cerrarPeer(){try{llamada&&llamada.close()}catch(e){}try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}peer=conn=llamada=null}
 function enviar(m){if(conn&&conn.open)try{conn.send(m)}catch(e){}}
 function onRemoto(m){if(!S||!m||typeof m!=='object')return;
-  if(m.k==='hola'){if(m.dev){S.dispositivo=m.dev}ev('sistema',{texto:'Navegador del participante: '+(m.nav||'?')+(m.dev?' · ve la versión '+({movil:'móvil (390)',tablet:'tablet (1024)',escritorio:'escritorio (1920)'}[m.dev]||m.dev):'')});return}
+  if(m.k==='figmaTipos'){S.figmaTipos=m.c;if(S.tactil&&!S._avTactil&&!m.c.MOUSE_PRESS_OR_RELEASE&&(m.c.PRESENTED_NODE_CHANGED||0)>2){S._avTactil=1;ev('sistema',{texto:'Figma no está enviando los toques desde este dispositivo táctil: el mapa de calor quedará vacío; las pantallas y la voz sí se registran'})}return}
+  if(m.k==='hola'){if(m.dev){S.dispositivo=m.dev}if(m.tactil!=null)S.tactil=!!m.tactil;ev('sistema',{texto:'Navegador del participante: '+(m.nav||'?')+(m.dev?' · ve la versión '+({movil:'móvil (390)',tablet:'tablet (1024)',escritorio:'escritorio (1920)'}[m.dev]||m.dev):'')});return}
   if(m.k==='figma'){onFigma(m.type,m.data||{});return}
   if(m.k==='voz'){if(m.texto){S.voz.push({t:now(),texto:m.texto,tarea:S.actual,pantalla:S.pantalla});ev('voz',{texto:m.texto})}return}
   if(m.k==='interim'){$('#interim').textContent=m.texto||'';return}
