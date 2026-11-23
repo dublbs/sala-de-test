@@ -178,6 +178,34 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
 .view .sum>.card.tabp{display:none;flex:1;min-height:0;overflow:auto}.view .sum>.card.tabp.on{display:block}.view .sum>.card.tabp>h3{display:none}
 .view .sum>.card.solo{flex:1;min-height:0;overflow:auto}
 @media (max-width:700px){.view.on .sum{padding:10px 12px;gap:8px}.view .sum>.card{padding:12px}.view .sum>.card:first-child .help{font-size:11px}}
+.tx-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 16px}
+.tx-tools .chk{font-size:13px}
+.txwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+@media(max-width:900px){.txwrap{grid-template-columns:1fr}.txplayer{position:static!important}}
+.txdoc{font-size:14px;line-height:1.6;color:var(--texto)}
+.txseg{padding:20px 0;border-top:1px solid var(--linea)}.txseg:first-child{border-top:0;padding-top:0}
+.txseg h4{font-size:18px;margin:0 0 4px;color:var(--profundo)}
+.txseg .txesc{color:var(--suave);margin:0 0 10px}
+.txprops{display:grid;grid-template-columns:140px 1fr;gap:2px 12px;font-size:13px;margin:0 0 12px}
+.txprops dt{color:var(--suave)}.txprops dd{margin:0}
+.txpath{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 14px;font-size:12px}
+.txpath .st{background:var(--claro);color:var(--profundo);border-radius:999px;padding:3px 10px}
+.txpath .st.ok{background:#dff0dc;color:var(--ok);font-weight:600}.txpath .ar{color:var(--suave)}
+.txrow{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;padding:4px 8px;border-radius:8px;cursor:pointer}
+.txrow:hover{background:var(--papel)}.txrow.sel{background:var(--claro)}
+.txrow time{font:500 12px/1.9 ui-monospace,Menlo,monospace;color:var(--suave)}
+.txrow.k-pantalla b{color:var(--profundo)}.txrow.k-pantalla .n{display:inline-block;min-width:22px;text-align:center;font-size:11px;background:var(--marca);color:#fff;border-radius:999px;margin-right:6px}
+.txrow.k-clic{color:var(--suave);font-size:13px}.txrow.k-clic.miss{color:var(--err)}
+.txrow.k-voz .q{border-left:3px solid var(--marca);padding-left:12px;font-size:15px}
+.txrow .callout{background:#fff4d6;border-radius:8px;padding:6px 10px;font-size:13px}
+.txrow .callout.seq{background:#e9f3e6}
+.txrow.k-estado,.txrow.k-sistema{color:var(--suave);font-size:12px}
+.txdoc.sin-voz .k-voz,.txdoc.sin-rec .k-pantalla,.txdoc.sin-rec .k-clic,.txdoc.sin-est .k-estado,.txdoc.sin-sis .k-sistema,.txdoc.sin-mod .k-moderador{display:none}
+.txplayer{position:sticky;top:16px;border:1px solid var(--linea);border-radius:12px;padding:12px;background:#fff}
+.txplayer canvas{display:block;width:100%;border-radius:8px;margin:8px 0}
+.txp-head{font-size:13px;line-height:1.4}.txp-head small{color:var(--suave)}
+.txp-ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.txp-ctrl .btn{padding:6px 12px;font-size:12px}
+.txp-wrap{max-height:70vh;overflow:auto}
 </style>
 </head>
 <body>
@@ -272,9 +300,24 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
       <button class="btn" id="dlJson">Descargar sesión (.json)</button>
       <button class="btn sec" id="dlFicha">Ficha (.csv)</button>
       <button class="btn sec" id="dlMatriz">Matriz (.csv)</button>
-      <button class="btn sec" id="cpIA">Copiar para IA</button>
+      <button class="btn sec" id="cpIA" title="Copia el registro completo para analizarlo después con IA. La sala no resume nada.">Copiar registro (análisis posterior)</button>
       <button class="btn sec" id="bNew">Nueva sesión</button> <button class="btn sec" id="bSumHist">Sesiones guardadas</button>
     </div>
+  </div>
+  <div class="card"><h3>Transcripción y recorrido</h3>
+    <p class="help">Todo lo que la persona dijo, palabra por palabra, en el orden en que pasó y junto a lo que hizo en el prototipo. Sin resúmenes: el análisis se hace después. Toca una línea para ver ese momento en el reproductor.</p>
+    <div class="tx-tools"><span class="help" style="margin:0">Mostrar:</span>
+      <label class="chk"><input type="checkbox" class="txf" value="voz" checked>Lo que dijo</label>
+      <label class="chk"><input type="checkbox" class="txf" value="rec" checked>Pantallas y clics</label>
+      <label class="chk"><input type="checkbox" class="txf" value="mod" checked>Notas de moderación</label>
+      <label class="chk"><input type="checkbox" class="txf" value="est">Cambios de estado</label>
+      <label class="chk"><input type="checkbox" class="txf" value="sis">Avisos del sistema</label>
+      <span style="flex:1"></span>
+      <button class="btn sec" id="txCopy">Copiar para Notion</button><button class="btn sec" id="txDl">Descargar (.md)</button></div>
+    <div class="txwrap"><div class="txdoc sin-est sin-sis" id="txDoc"></div>
+      <aside class="txplayer"><div class="txp-head" id="txpHead">Toca una línea de la transcripción.</div><div class="txp-wrap"><canvas id="txpCanvas"></canvas></div>
+        <div class="txp-ctrl"><button class="btn sec" id="txpPrev" title="Paso anterior">‹</button><button class="btn" id="txpPlay">▶ Reproducir</button><button class="btn sec" id="txpNext" title="Paso siguiente">›</button><select id="txpVel" style="width:auto"><option value="1">1×</option><option value="2" selected>2×</option><option value="4">4×</option></select></div>
+        <p class="help" style="margin:8px 0 0">Recorrido reconstruido con los avisos de Figma: pantalla, toques y zona visible (rectángulo). Funciona igual en computador, tablet y celular.</p></aside></div>
   </div>
   <div class="card"><h3>Ficha de testeo por usuario</h3><p class="help">Puedes corregir cualquier celda antes de descargar.</p><table id="tFicha"></table></div>
   <div class="card"><h3>Tareas</h3><table id="tTasks"></table></div>
@@ -349,10 +392,10 @@ document.querySelectorAll('.pasos button').forEach(b=>b.onclick=()=>{document.qu
 renderTaskEditor();
 
 // Resultados / sesiones / consolidado: una pestaña por tarjeta, todo dentro de la pantalla
-const REDIBUJAR={vSum:()=>typeof dibujarS==='function'&&dibujarS(),vComb:()=>typeof dibujarC==='function'&&dibujarC()};
+const REDIBUJAR={vSum:()=>{typeof dibujarS==='function'&&dibujarS();typeof txPintar==='function'&&txPintar()},vComb:()=>typeof dibujarC==='function'&&dibujarC()};
 document.querySelectorAll('.view .sum').forEach(sum=>{const cards=[...sum.children].filter(c=>c.classList.contains('card')).slice(1);if(cards.length<2){cards.forEach(c=>c.classList.add('solo'));return}
   const nav=document.createElement('nav');nav.className='sumtabs';nav.setAttribute('role','tablist');
-  cards.forEach((c,i)=>{c.classList.add('tabp');if(!i)c.classList.add('on');const b=document.createElement('button');b.type='button';const CORTO={'Ficha de testeo por usuario':'Ficha','Hallazgos propuestos':'Hallazgos','Matriz de hallazgos consolidada':'Hallazgos','Mapa de calor de todas las sesiones':'Mapa de calor'};const tx=((c.querySelector('h3')||{}).textContent||('Parte '+(i+1))).trim();b.textContent=CORTO[tx]||tx;b.title=tx;if(!i)b.classList.add('on');
+  cards.forEach((c,i)=>{c.classList.add('tabp');if(!i)c.classList.add('on');const b=document.createElement('button');b.type='button';const CORTO={'Transcripción y recorrido':'Transcripción','Ficha de testeo por usuario':'Ficha','Hallazgos propuestos':'Hallazgos','Matriz de hallazgos consolidada':'Hallazgos','Mapa de calor de todas las sesiones':'Mapa de calor'};const tx=((c.querySelector('h3')||{}).textContent||('Parte '+(i+1))).trim();b.textContent=CORTO[tx]||tx;b.title=tx;if(!i)b.classList.add('on');
     b.onclick=()=>{nav.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));cards.forEach(x=>x.classList.toggle('on',x===c));const v=sum.closest('.view').id;REDIBUJAR[v]&&setTimeout(REDIBUJAR[v],0)};nav.appendChild(b)});
   sum.insertBefore(nav,cards[0])});
 const LIBRE_ID='Libre';
@@ -587,8 +630,8 @@ function hallazgos(ses){
   for(const m of ses.marcas)add('marca-'+m.t,`Fricción marcada en ${nombrePantalla(m.pantalla)}${m.nota?': '+m.nota:''}`,'Media',`${fmt(m.t)} · “${m.voz||'sin voz'}”`,m.tarea);
   const seen=new Set();return out.filter(h=>{if(seen.has(h.clave))return false;seen.add(h.clave);return true});
 }
-function vozCercaS(ses,t,a,d){return (ses.voz||[]).filter(v=>v.t>=t-a&&v.t<=t+d).map(v=>v.texto).join(' ').slice(0,180)||'sin voz registrada'}
-function vozResumen(ses,a,b){const txt=(ses.voz||[]).filter(v=>v.t>=a&&v.t<=b).map(v=>v.texto).join(' ');return txt?('“'+txt.slice(0,160)+(txt.length>160?'…':'')+'”'):'sin voz registrada'}
+function vozCercaS(ses,t,a,d){return (ses.voz||[]).filter(v=>v.t>=t-a&&v.t<=t+d).map(v=>v.texto).join(' ')||'sin voz registrada'}
+function vozResumen(ses,a,b){const txt=(ses.voz||[]).filter(v=>v.t>=a&&v.t<=b).map(v=>v.texto).join(' ');return txt?('“'+txt+'”'):'sin voz registrada'}
 
 /* ================= resumen ================= */
 function fichaRows(ses){
@@ -607,6 +650,59 @@ function fichaRows(ses){
   if(lb){const m=metricas(lb,ses);const rec=recorrido(lb,ses);filas.push(['Exploración libre (sin tarea)',[(m.dur!=null?fmt(m.dur):'—')+' · '+m.clics+' clics ('+m.perdidos+' sin respuesta) · '+new Set(rec).size+' pantallas','Recorrido: '+(rec.map(nombrePantalla).join(' → ')||'sin cambios de pantalla'),lb.seqComentario?'Comentario: “'+lb.seqComentario+'”':'',vozResumen(ses,lb.inicio,lb.fin??ses.fin)].filter(Boolean).join('\n')])}
   return filas;
 }
+
+/* ================= transcripción y recorrido ================= */
+let TX={ses:null,ev:[],i:-1,play:0};
+function txSegmentos(ses){
+  const evs=ses.eventos.slice().sort((a,b)=>a.t-b.t);const segs=[];let cur=null;
+  const tk=id=>ses.tareas.find(t=>t.id===id);
+  for(const e of evs){const k=e.tarea||'';if(!cur||cur.k!==k){cur={k,tarea:k?tk(k):null,ev:[]};segs.push(cur)}cur.ev.push(e)}
+  let n=0;for(const g of segs){if(!g.tarea)g.titulo=n===0&&g===segs[0]?'Antes de las tareas':(g===segs[segs.length-1]?'Después de las tareas':'Entre tareas');n++}
+  return {evs,segs}}
+function txLinea(e){const tipo=e.tipo;
+  if(tipo==='pantalla')return {k:'pantalla',html:`<b>${esc(nombrePantalla(e.id))}</b>`,md:`→ **${nombrePantalla(e.id)}**`};
+  if(tipo==='clic'){const miss=e.respuesta===false;return {k:'clic',miss,html:(miss?'✕ Clic sin respuesta · ':'● Clic · ')+esc(e.elemento||''),md:(miss?'✕ Clic sin respuesta · ':'● Clic · ')+(e.elemento||'')}}
+  if(tipo==='voz'){const t=String(e.texto||'');const mq=t.match(/^\[([^\]]+)\]\s*(.*)$/);if(mq){const et=mq[1].replace(/^[^·]*·\s*/,'').replace(/^facilidad/,'Facilidad').replace(/^Exploración libre · comentario$/,'Comentario final');const tx=et+(mq[2]?' · “'+mq[2]+'”':'');return {k:'moderador',html:`<div class="callout seq">📝 ${esc(tx)}</div>`,md:`> 📝 ${tx}`}}return {k:'voz',html:`<div class="q">“${esc(t)}”</div>`,md:`> “${t}”`}}
+  if(tipo==='moderador')return {k:'moderador',html:`<div class="callout">📌 ${esc(e.texto||'')}</div>`,md:`> 📌 ${e.texto||''}`};
+  if(tipo==='estado')return {k:'estado',html:'↻ Cambió: '+esc(e.elemento||''),md:'↻ Cambió: '+(e.elemento||'')};
+  return {k:'sistema',html:'· '+esc(e.texto||''),md:'· '+(e.texto||'')}}
+function txRec(t,ses){const rec=recorrido(t,ses);if(t.inicio!=null){let ini=null;for(const e of ses.eventos){if(e.t>t.inicio)break;if(e.tipo==='pantalla')ini=e.id}if(!ini){const f=ses.eventos.find(e=>e.tarea===t.id&&e.pantalla);ini=f&&f.pantalla}if(ini&&rec[0]!==ini)rec.unshift(ini)}return rec}
+function txProps(t,ses){const m=metricas(t,ses);return [['Resultado',esLibre(t)?'Exploración libre':(t.resultado||'Sin cerrar')],['Tiempo',m.dur!=null?fmt(m.dur):'—'],['Clics',m.clics+(m.perdidos?' ('+m.perdidos+' sin respuesta)':'')],['Pantallas',String(m.pantallas)],['Facilidad',t.seq!=null?t.seq+'/7':'—'],['Comentario',t.seqComentario?'“'+t.seqComentario+'”':'—']]}
+function renderTx(ses){TX.ses=ses;const {evs,segs}=txSegmentos(ses);TX.ev=evs;TX.i=-1;txStop();let h='',paso=0;
+  for(const g of segs){const t=g.tarea;h+='<section class="txseg">';
+    if(t){h+=`<h4>${esc(esLibre(t)?'Exploración libre':t.id)}</h4><p class="txesc">${esc(t.escenario||'')}</p><dl class="txprops">${txProps(t,ses).map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join('')}</dl>`;
+      const rec=txRec(t,ses),ok=new Set(exitoIds(t));if(rec.length)h+='<div class="txpath">'+rec.map((id,i)=>(i?'<span class="ar">→</span>':'')+`<span class="st${ok.has(id)?' ok':''}">${esc(nombrePantalla(id).replace(/^(Móvil|Tablet) · /,''))}</span>`).join('')+'</div>'}
+    else h+=`<h4>${g.titulo}</h4>`;
+    paso=0;for(const e of g.ev){const L=txLinea(e);const i=evs.indexOf(e);if(L.k==='pantalla')paso++;h+=`<div class="txrow k-${L.k}${L.miss?' miss':''}" data-i="${i}"><time>${fmt(e.t)}</time><div>${L.k==='pantalla'?`<span class="n">${paso}</span>`:''}${L.html}</div></div>`}
+    h+='</section>'}
+  $('#txDoc').innerHTML=h||'<p class="help">Esta sesión no tiene registro.</p>';
+  if(evs.length)txIr(0)}
+function txPantallaEn(i){for(let j=i;j>=0;j--){const e=TX.ev[j];if(e.tipo==='pantalla')return {id:e.id,desde:e.t};if(e.tipo==='clic'&&e.pantalla)return {id:e.pantalla,desde:null}}const e=TX.ev[i];return {id:e&&e.pantalla,desde:0}}
+function txPintar(){const ses=TX.ses,i=TX.i;if(!ses||i<0||!window.Calor)return;const e=TX.ev[i];const P=txPantallaEn(i);const sid=P.id;const cv=$('#txpCanvas');if(!sid){$('#txpHead').textContent='Sin pantalla registrada todavía.';return}
+  const desde=P.desde??0;const pts=(ses.calor||[]).filter(p=>p.s===sid&&p.t<=e.t+50&&p.t>=desde-50);
+  const ancho=cv.parentElement.clientWidth||300;Calor.render(cv,sid,pts,{ancho,nombres:true,opacidad:0.55});
+  const PS=(window.PANTALLAS||{})[sid];if(!PS)return;const k=ancho/PS.w;
+  const vh=PS.w<=430?844:PS.w<=1100?1366:1080;const last=pts[pts.length-1];const oy=last?(last.oy||0):0;
+  const marcas=()=>{if(TX.i!==i)return;const g=cv.getContext('2d');const d=window.devicePixelRatio||1;g.setTransform(d,0,0,d,0,0);g.strokeStyle='#3d376a';g.lineWidth=2;g.setLineDash([6,4]);g.strokeRect(1,oy*k+1,PS.w*k-2,Math.min(vh,PS.h-oy)*k-2);g.setLineDash([]);
+    if(last&&e.tipo==='clic'&&Math.abs(last.t-e.t)<1500){const q=Calor.pos(last,true);if(q){g.beginPath();g.arc(q.x*k,q.y*k,16,0,7);g.lineWidth=4;g.strokeStyle=last.ok?'#2f6b2a':'#8a2a3c';g.stroke()}}};
+  marcas();setTimeout(marcas,120);setTimeout(marcas,400);
+  $('#txpHead').innerHTML=`<b>${esc(nombrePantalla(sid))}</b><br><small>${fmt(e.t)} · ${esc(e.tarea||'sin tarea')} · paso ${i+1} de ${TX.ev.length}</small>`;
+  const wrap=cv.parentElement;if(oy)wrap.scrollTop=Math.max(0,oy*k-20)}
+function txIr(i){if(!TX.ev.length)return;TX.i=Math.max(0,Math.min(TX.ev.length-1,i));document.querySelectorAll('#txDoc .txrow.sel').forEach(r=>r.classList.remove('sel'));const r=document.querySelector(`#txDoc .txrow[data-i="${TX.i}"]`);if(r)r.classList.add('sel');txPintar()}
+function txStop(){clearTimeout(TX.play);TX.play=0;const b=$('#txpPlay');if(b)b.textContent='▶ Reproducir'}
+function txPaso(){if(TX.i>=TX.ev.length-1){txStop();return}const a=TX.ev[TX.i].t,b=TX.ev[TX.i+1].t;txIr(TX.i+1);const r=document.querySelector(`#txDoc .txrow[data-i="${TX.i}"]`);if(r)r.scrollIntoView({block:'nearest'});TX.play=setTimeout(txPaso,Math.min(4000,Math.max(250,(TX.ev[TX.i+1]?TX.ev[TX.i+1].t-TX.ev[TX.i].t:0)/(+$('#txpVel').value||2))))}
+$('#txDoc').addEventListener('click',e=>{const r=e.target.closest('.txrow');if(!r)return;txStop();txIr(+r.dataset.i)});
+$('#txpPrev').onclick=()=>{txStop();txIr(TX.i-1)};$('#txpNext').onclick=()=>{txStop();txIr(TX.i+1)};
+$('#txpPlay').onclick=()=>{if(TX.play){txStop();return}$('#txpPlay').textContent='❚❚ Pausa';if(TX.i>=TX.ev.length-1)txIr(0);TX.play=setTimeout(txPaso,300)};
+document.querySelectorAll('.txf').forEach(c=>c.onchange=()=>{const m={voz:'sin-voz',rec:'sin-rec',mod:'sin-mod',est:'sin-est',sis:'sin-sis'};$('#txDoc').classList.toggle(m[c.value],!c.checked)});
+function txMarkdown(ses){const {segs}=txSegmentos(ses);const p=ses.participante||{};const on=v=>document.querySelector(`.txf[value="${v}"]`).checked;
+  let md=`# Sesión · ${p.alias||'Participante'}\n\n- **Fecha:** ${p.fecha||''}\n- **Perfil:** ${p.perfil||'—'}\n- **Versión:** ${({movil:'Celular',tablet:'Tablet',escritorio:'Escritorio'})[ses.dispositivo]||ses.dispositivo||'—'}\n- **Duración:** ${fmt(ses.fin||0)}\n\n`;
+  for(const g of segs){const t=g.tarea;if(t){md+=`## ${esLibre(t)?'Exploración libre':t.id} · ${t.escenario||''}\n\n`+txProps(t,ses).map(([a,b])=>`- **${a}:** ${b}`).join('\n')+'\n';const rec=txRec(t,ses);if(rec.length)md+=`- **Recorrido:** ${rec.map(nombrePantalla).join(' → ')}\n`;md+='\n'}else md+=`## ${g.titulo}\n\n`;
+    for(const e of g.ev){const L=txLinea(e);const vis={voz:on('voz'),pantalla:on('rec'),clic:on('rec'),moderador:on('mod'),estado:on('est'),sistema:on('sis')}[L.k];if(!vis)continue;md+=L.md.startsWith('>')?`\n> \`${fmt(e.t)}\` ${L.md.slice(2)}\n\n`:`- \`${fmt(e.t)}\` ${L.md}\n`}
+    md+='\n'}
+  return md}
+$('#txCopy').onclick=async()=>{const md=txMarkdown(S);try{await navigator.clipboard.writeText(md);$('#txCopy').textContent='Copiado ✓'}catch(e){download(`transcripcion-${S.participante.alias}.md`,md,'text/markdown;charset=utf-8')}setTimeout(()=>$('#txCopy').textContent='Copiar para Notion',2500)};
+$('#txDl').onclick=()=>download(`transcripcion-${S.participante.alias}.md`,txMarkdown(S),'text/markdown;charset=utf-8');
 let H=[];
 function renderSummary(){
   const ses=S;H=hallazgos(ses);
@@ -614,7 +710,7 @@ function renderSummary(){
   $('#tFicha').innerHTML='<tr><th style="width:34%">Campo</th><th>Detalle / Registro</th></tr>'+fichaRows(ses).map(r=>`<tr><td>${esc(r[0])}</td><td contenteditable style="white-space:pre-line">${esc(r[1])}</td></tr>`).join('');
   $('#tTasks').innerHTML='<tr><th>Tarea</th><th>Resultado</th><th>Tiempo</th><th>Clics</th><th>Sin respuesta</th><th>Pantallas</th><th>Mayor pausa</th><th>Facilidad</th></tr>'+ses.tareas.filter(t=>t.inicio!=null).map(t=>{const m=metricas(t,ses);return `<tr><td>${esc(esLibre(t)?'Exploración libre':t.id)}</td><td>${esc(esLibre(t)?'Sin tarea · '+recorrido(t,ses).length+' pasos':(t.resultado||'Sin cerrar'))}</td><td>${m.dur!=null?fmt(m.dur):'—'}</td><td>${m.clics}</td><td>${m.perdidos}</td><td>${m.pantallas}</td><td>${Math.round(m.maxGap/1000)} s</td><td>${t.seq!=null?t.seq+'/7':'—'}</td></tr>`}).join('');
   renderMatriz('#tMatriz',H.map(h=>({...h,frecuencia:'Única (1/1)'})));
-  heatSelect('#sScr',S.calor,S.pantalla);dibujarS();
+  heatSelect('#sScr',S.calor,S.pantalla);dibujarS();renderTx(ses);
 }
 function renderMatriz(sel,rows){$(sel).innerHTML='<tr><th>Problema</th><th>Severidad</th><th>Frecuencia</th><th>Acción en Figma</th><th>Evidencia</th></tr>'+rows.map(h=>`<tr><td contenteditable>${esc(h.problema)}</td><td contenteditable class="sev-${h.severidad}">${esc(h.severidad)}</td><td contenteditable>${esc(h.frecuencia)}</td><td contenteditable>${esc(h.accion||'')}</td><td contenteditable>${esc(h.evidencia)}</td></tr>`).join('')}
 const tableRows=sel=>[...document.querySelectorAll(sel+' tr')].map(tr=>[...tr.children].map(td=>td.innerText.trim()));
@@ -623,7 +719,7 @@ $('#dlFicha').onclick=()=>download(`ficha-${S.participante.alias}.csv`,csv(table
 $('#dlMatriz').onclick=()=>download(`matriz-${S.participante.alias}.csv`,csv(tableRows('#tMatriz')),'text/csv;charset=utf-8');
 $('#cpIA').onclick=async()=>{const resumen={participante:S.participante,dispositivo:S.dispositivo,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,criterio:t.criterio,resultado:t.resultado,...(({dur,clics,perdidos,pantallas,maxGap})=>({tiempo_s:dur!=null?Math.round(dur/1000):null,clics,clics_sin_respuesta:perdidos,pantallas,mayor_pausa_s:Math.round(maxGap/1000)}))(metricas(t,S))})),eventos:S.eventos.filter(e=>e.tipo!=='voz').map(e=>({t:fmt(e.t),tipo:e.tipo,tarea:e.tarea,pantalla:nombrePantalla(e.pantalla),elemento:e.elemento,respuesta:e.respuesta,texto:e.texto})),voz:S.voz.map(v=>({t:fmt(v.t),tarea:v.tarea,texto:v.texto})),marcas:S.marcas.map(m=>({t:fmt(m.t),nota:m.nota,pantalla:nombrePantalla(m.pantalla),voz:m.voz})),hallazgos_propuestos:H};
   const prompt=`Eres investigador/a UX. Con este registro de un test de usabilidad moderado del prototipo de Enoturismo Chile, completa:\n1) Ficha de testeo por usuario con los campos: Nombre/Alias, Perfil, Fecha y modalidad, Tareas asignadas, Tiempo por tarea, Observaciones y citas textuales (solo frases que aparecen en "voz"), Puntos de fricción o errores, Nivel de éxito (Completada / Completada con dificultad / No completada).\n2) Matriz de hallazgos: Problema | Severidad (Alta, Media, Baja) | Frecuencia (en esta sesión) | Acción en Figma (propuesta concreta) | Evidencia (minuto y cita).\nNo inventes datos que no estén en el registro; si algo no se puede saber, dilo.\n\nREGISTRO:\n${JSON.stringify(resumen,null,1)}`;
-  try{await navigator.clipboard.writeText(prompt);$('#cpIA').textContent='Copiado ✓'}catch(e){download(`para-ia-${S.participante.alias}.txt`,prompt)}setTimeout(()=>$('#cpIA').textContent='Copiar para IA',2500)};
+  try{await navigator.clipboard.writeText(prompt);$('#cpIA').textContent='Copiado ✓'}catch(e){download(`para-ia-${S.participante.alias}.txt`,prompt)}setTimeout(()=>$('#cpIA').textContent='Copiar registro (análisis posterior)',2500)};
 
 /* ================= consolidar ================= */
 let COMB=[];
