@@ -11,6 +11,7 @@
 *{box-sizing:border-box}html,body{height:100%;margin:0}
 body{font-family:Poppins,system-ui,sans-serif;background:#121019;color:var(--texto);font-size:15px}
 button{font:inherit;cursor:pointer}
+a.btn{display:inline-block;text-decoration:none;cursor:pointer}
 .btn{border:0;border-radius:999px;padding:12px 22px;background:var(--marca);color:#fff;font-weight:500}
 .btn.sec{background:transparent;color:var(--marca);box-shadow:inset 0 0 0 1.5px var(--marca)}
 .btn.ok{background:var(--ok)}.btn.err{background:transparent;color:var(--err);box-shadow:inset 0 0 0 1.5px var(--err)}
@@ -127,6 +128,13 @@ button{font:inherit;cursor:pointer}
   <button class="btn ok" id="bTermine">Terminé</button>
   <button class="btn err" id="bRindo">Me rindo</button>
 </div>
+<div class="capa off" id="cFigma"><div class="tarjeta"><h2>Falta un paso</h2><h1>Inicia sesión en Figma</h1>
+  <p>El prototipo está hecho en Figma. Para que quede registrado dónde haces clic, Figma necesita que tengas una sesión abierta en este navegador. La cuenta es gratis y basta con iniciarla una vez.</p>
+  <ol style="padding-left:20px;line-height:1.5"><li>Presiona <b>Abrir Figma</b>: se abre en otra pestaña. Inicia sesión o crea una cuenta (puede ser con Google).</li><li>Vuelve a esta pestaña y presiona <b>Ya inicié sesión</b>.</li></ol>
+  <div class="fila" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><a class="btn" id="bFigLogin" href="https://www.figma.com/login" target="_blank" rel="noopener">Abrir Figma</a><button class="btn sec" id="bFigListo">Ya inicié sesión</button></div>
+  <p id="figEstado" class="estado"></p>
+  <p style="margin-top:14px;font-size:13px"><a href="#" id="bFigSeguir">Seguir sin iniciar sesión</a> (podrás hacer las tareas, pero no quedarán registrados tus clics).</p>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" onerror="var x=document.createElement('script');x.src='https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';document.head.appendChild(x)"></script>
@@ -196,11 +204,11 @@ async function compartir(){
   return {pantalla,mic}}
 
 /* ---------- transcripción ---------- */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,vozOn=false,fallas=0;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,vozOn=false,fallas=0,vozAvisada=false;
 function voz(){if(!CFG.voz)return;if(!SR){enviar({k:'estado',texto:'su navegador ('+NAV+') no permite transcribir voz; igual escuchas su voz en vivo. Para transcripción: Chrome o Edge',voz:'off'});return}vozOn=true;
   const go=()=>{if(!vozOn)return;rec=new SR();rec.lang=CFG.voz;rec.continuous=true;rec.interimResults=true;let t0=Date.now();
     rec.onresult=r=>{fallas=0;let it='';for(let i=r.resultIndex;i<r.results.length;i++){const x=r.results[i];if(x.isFinal){const s=x[0].transcript.trim();if(s)enviar({k:'voz',texto:s})}else it+=x[0].transcript}enviar({k:'interim',texto:it})};
-    rec.onstart=()=>enviar({k:'estado',texto:'transcripción activa',voz:'on'});
+    rec.onstart=()=>{if(!vozAvisada){vozAvisada=true;enviar({k:'estado',texto:'transcripción activa',voz:'on'})}};
     rec.onerror=e=>{if(e.error==='no-speech'||e.error==='aborted')return;fallas++;if(['not-allowed','service-not-allowed','audio-capture'].includes(e.error)||fallas>=3){vozOn=false;enviar({k:'estado',texto:'la transcripción no funciona en su navegador ('+e.error+'); igual escuchas su voz en vivo',voz:'off'})}};
     rec.onend=()=>{if(vozOn)setTimeout(go,Date.now()-t0<1500?Math.min(8000,500*2**fallas):150)};
     try{rec.start()}catch(e){setTimeout(go,1000)}};go()}
@@ -212,8 +220,14 @@ function embedUrl(){let u;try{u=new URL(CFG.url)}catch(e){return null}const m=u.
   const q=new URLSearchParams({'node-id':st.replace(':','-'),'starting-point-node-id':st.replace('-',':'),'embed-host':'sala-de-test','client-id':CFG.cid||'','scaling':'scale-down-width','content-scaling':'fixed','hide-ui':'1'});
   return `https://embed.figma.com/proto/${m[1]}/${m[2]||'prototipo'}?${q}`}
 let fig=null,figOk=false;const FTIP={};setInterval(()=>{if(Object.keys(FTIP).length)enviar({k:'figmaTipos',c:FTIP})},15000);
-function montar(){const e=$('#escena');e.className='on'+(CFG.dev==='movil'?' movil':'');fig=document.createElement('iframe');fig.src=embedUrl();fig.allow='fullscreen';e.appendChild(fig);
-  setTimeout(()=>{if(!figOk)enviar({k:'estado',texto:'Figma no envía avisos desde su navegador (revisa Client ID u orígenes permitidos)'})},15000)}
+function montar(){const e=$('#escena');e.className='on'+(CFG.dev==='movil'?' movil':'');fig=document.createElement('iframe');fig.src=embedUrl();fig.setAttribute('allow','fullscreen; storage-access');e.appendChild(fig);
+  vigilarFigma()}
+// Figma solo envía avisos (pantallas, clics) si quien mira tiene sesión abierta en Figma. Sin sesión, el prototipo funciona pero no queda registro.
+let figSeguir=false,figT=0;
+function vigilarFigma(ms=12000){clearTimeout(figT);figT=setTimeout(()=>{if(figOk||figSeguir)return;enviar({k:'estado',texto:'Figma no envía avisos: el participante no tiene sesión abierta en Figma. Se le pidió iniciar sesión'});show('#cFigma',true)},ms)}
+$('#bFigListo').onclick=()=>{$('#figEstado').textContent='Recargando el prototipo…';const e=$('#escena');if(fig)fig.remove();fig=document.createElement('iframe');fig.src=embedUrl();fig.allow='fullscreen';fig.setAttribute('allow','fullscreen; storage-access');e.appendChild(fig);
+  setTimeout(()=>{if(figOk){show('#cFigma',false);enviar({k:'estado',texto:'El participante inició sesión en Figma: ya llegan los avisos'})}else $('#figEstado').textContent='Todavía no llegan los avisos. Revisa que iniciaste sesión en figma.com en este mismo navegador y vuelve a presionar "Ya inicié sesión". Si Figma muestra un botón para permitir el acceso dentro del prototipo, presiónalo.'},9000)};
+$('#bFigSeguir').onclick=e=>{e.preventDefault();figSeguir=true;show('#cFigma',false);enviar({k:'estado',texto:'El participante siguió sin sesión en Figma: no se registran pantallas ni clics'})};
 function reiniciar(){if(fig)fig.contentWindow.postMessage({type:'RESTART'},'https://embed.figma.com')}
 window.addEventListener('message',e=>{if(e.origin!=='https://www.figma.com'&&e.origin!=='https://embed.figma.com')return;const d=e.data;if(!d||!d.type)return;figOk=true;FTIP[d.type]=(FTIP[d.type]||0)+1;
   enviar({k:'figma',type:d.type,data:d.data||{}});
@@ -244,7 +258,7 @@ function mostrarOk(res,auto){
   $('#okT').textContent=auto?'¡Lo lograste!':res==='No completada'?'No te preocupes':'¡Gracias!';
   $('#okP').textContent=res==='No completada'?'Eso nos ayuda a encontrar lo que hay que mejorar.':(ult?'Era la última tarea.':'Pasemos a la siguiente.');
   $('#bSig').textContent=ult?'Terminar':'Siguiente tarea';show('#cOk',true)}
-$('#bTermine').onclick=()=>{const tk=CFG.tareas[actual];if(tk.libre){clearTimeout(avisoLibre);return terminar('Explorada',false)}terminar(tk.exito&&tk.exito.length?'Completada con dificultad':'Completada',false)};
+$('#bTermine').onclick=()=>{const tk=CFG.tareas[actual];if(tk.libre){clearTimeout(avisoLibre);return terminar('Explorada',false)}terminar(!figOk?'Completada (según participante)':tk.exito&&tk.exito.length?'Completada con dificultad':'Completada',false)};
 $('#bRindo').onclick=()=>terminar('No completada',false);
 $('#bSig').onclick=()=>{show('#cOk',false);if(actual>=CFG.tareas.length-1){enviar({k:'fin'});show('#cFin',true);setTimeout(apagar,1500);return}actual++;verTarea(actual)};
 
