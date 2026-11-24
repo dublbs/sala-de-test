@@ -15,9 +15,9 @@ button{font:inherit;cursor:pointer}
 .btn.sec{background:transparent;color:var(--marca);box-shadow:inset 0 0 0 1.5px var(--marca)}
 .btn.ok{background:var(--ok)}.btn.err{background:transparent;color:var(--err);box-shadow:inset 0 0 0 1.5px var(--err)}
 .btn:disabled{opacity:.45;cursor:default}
-.capa{position:fixed;inset:0;display:flex;align-items:safe center;justify-content:center;padding:20px;overflow:auto;background:rgba(18,16,25,.72);z-index:20}
+.capa{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow:auto;background:rgba(18,16,25,.72);z-index:20}
 .capa.off{display:none}
-.tarjeta{background:#fff;border-radius:20px;padding:32px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.tarjeta{margin:auto 0;background:#fff;border-radius:20px;padding:32px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .tarjeta h1{font-size:26px;color:var(--marca);margin:0 0 10px}
 .tarjeta h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#665e7c;margin:0 0 8px;font-weight:500}
 .tarjeta p{line-height:1.6;color:var(--suave);margin:0 0 14px}
@@ -127,7 +127,7 @@ button{font:inherit;cursor:pointer}
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" onerror="var x=document.createElement('script');x.src='https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';document.head.appendChild(x)"></script>
 <script>
 const $=s=>document.querySelector(s);
 const show=(id,on)=>$(id).classList.toggle('off',!on);
@@ -147,7 +147,9 @@ $('#bCod').onclick=()=>{const v=$('#cod').value.trim().replace(/^.*s=/,'');if(!/
 $('#cod').addEventListener('keydown',e=>{if(e.key==='Enter')$('#bCod').click()});
 
 const esChrome=/Google Chrome|Microsoft Edge/.test(((navigator.userAgentData&&navigator.userAgentData.brands)||[]).map(b=>b.brand).join(' '))||(!navigator.userAgentData&&/Chrome\//.test(navigator.userAgent));
-const esMovil=/Android|iPhone|iPad/i.test(navigator.userAgent);
+const esMovil=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&(navigator.maxTouchPoints||0)>1);
+// nombre del navegador para quien modera (Edge, Opera y Samsung van antes que Chrome porque su UA también dice Chrome)
+const NAV=(()=>{const u=navigator.userAgent;if(/Edg\//.test(u))return 'Edge';if(/OPR\//.test(u))return 'Opera';if(/SamsungBrowser/.test(u))return 'Samsung Internet';if(/Firefox|FxiOS/.test(u))return 'Firefox';if(navigator.brave)return 'Brave';if(/CriOS/.test(u))return 'Chrome iOS';if(/Chrome\//.test(u))return 'Chrome';if(/Safari\//.test(u))return 'Safari';return 'otro'})();
 const esTactil=(navigator.maxTouchPoints||0)>0&&matchMedia('(pointer: coarse)').matches;
 if(SID&&(!esChrome||esMovil))$('#estBien').textContent=esMovil?'Estás en un celular o tablet: podrás hacer las tareas, pero no compartir la pantalla.':'Te recomendamos usar Google Chrome para que todo funcione.';
 const okForm=()=>{$('#bConectar').disabled=!($('#acepto').checked&&$('#dAlias').value.trim())};$('#acepto').onchange=okForm;$('#dAlias').addEventListener('input',okForm);
@@ -156,17 +158,19 @@ const datos=()=>({alias:$('#dAlias').value.trim(),edad:$('#dEdad').value,ocupaci
 /* ---------- conexión ---------- */
 let peer=null,conn=null,stream=null,listo=false,cola=[],cfgRes=null;const cfgListo=new Promise(r=>{cfgRes=r;if(CFG)r()});
 function enviar(m){if(conn&&conn.open){try{conn.send(m)}catch(e){}}else cola.push(m)}
-function conectar(){return new Promise((res,rej)=>{
+// PeerJS puede tardar si unpkg está bloqueado y se cargó el respaldo de jsdelivr
+function esperarPeer(ms=8000){return new Promise((res,rej)=>{const t0=Date.now();(function mira(){if(window.Peer)return res();if(Date.now()-t0>ms)return rej(new Error('peerjs'));setTimeout(mira,200)})()})}
+function conectar(){return esperarPeer().then(()=>new Promise((res,rej)=>{
   peer=new Peer({debug:1});
   const to=setTimeout(()=>rej(new Error('tiempo')),15000);
   peer.on('open',()=>{conn=peer.connect(SID,{reliable:true});
-    conn.on('open',()=>{clearTimeout(to);listo=true;enviar({k:'hola',dev:CFG?CFG.dev:null,tactil:esTactil,nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')+(esTactil?' · pantalla táctil':'')});while(cola.length)conn.send(cola.shift());res()});
+    conn.on('open',()=>{clearTimeout(to);listo=true;enviar({k:'hola',dev:CFG?CFG.dev:null,tactil:esTactil,nav:NAV+(esMovil?' · celular o tablet':' · computador')+(esTactil?' · pantalla táctil':'')});while(cola.length)conn.send(cola.shift());res()});
     conn.on('data',onMod);conn.on('close',()=>{listo=false;toast('<b>Se perdió la conexión con quien modera.</b> Puedes seguir; intentaremos reconectar.');setTimeout(reconectar,3000)})});
   peer.on('error',e=>{if(e.type==='peer-unavailable'){clearTimeout(to);rej(new Error('nomod'))}else if(!listo){clearTimeout(to);rej(e)}});
-})}
+}))}
 function reconectar(){if(listo||!peer||peer.destroyed)return;try{conn=peer.connect(SID,{reliable:true});conn.on('open',()=>{listo=true;while(cola.length)conn.send(cola.shift());if(stream)peer.call(SID,stream);toast('Conexión recuperada.')});conn.on('data',onMod);conn.on('close',()=>{listo=false;setTimeout(reconectar,4000)})}catch(e){setTimeout(reconectar,4000)}}
 function onMod(m){if(!m)return;
-  if(m.k==='config'&&m.cfg){const primera=!CFG;CFG=m.cfg;prepararCfg();if(primera&&listo)enviar({k:'hola',dev:CFG.dev,tactil:esTactil,nav:(esChrome?'Chrome/Edge':'otro')+(esMovil?' · celular':' · computador')+(esTactil?' · pantalla táctil':'')});cfgRes();return}
+  if(m.k==='config'&&m.cfg){const primera=!CFG;CFG=m.cfg;prepararCfg();if(primera&&listo)enviar({k:'hola',dev:CFG.dev,tactil:esTactil,nav:NAV+(esMovil?' · celular o tablet':' · computador')+(esTactil?' · pantalla táctil':'')});cfgRes();return}
   if(m.k==='msg')toast('<b>Mensaje:</b> '+String(m.texto).replace(/[<>&]/g,''));
   if(m.k==='restart'){reiniciar();toast('El prototipo volvió al inicio.')}
   if(m.k==='ocupado'){$('#errT').textContent='Esta sesión ya está en uso';$('#errP').textContent='Pídele a quien te envió el link uno nuevo.';show('#cErr',true)}
@@ -185,7 +189,7 @@ async function compartir(){
 
 /* ---------- transcripción ---------- */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,vozOn=false,fallas=0;
-function voz(){if(!SR||!CFG.voz){return}vozOn=true;
+function voz(){if(!CFG.voz)return;if(!SR){enviar({k:'estado',texto:'su navegador ('+NAV+') no permite transcribir voz; igual escuchas su voz en vivo. Para transcripción: Chrome o Edge',voz:'off'});return}vozOn=true;
   const go=()=>{if(!vozOn)return;rec=new SR();rec.lang=CFG.voz;rec.continuous=true;rec.interimResults=true;let t0=Date.now();
     rec.onresult=r=>{fallas=0;let it='';for(let i=r.resultIndex;i<r.results.length;i++){const x=r.results[i];if(x.isFinal){const s=x[0].transcript.trim();if(s)enviar({k:'voz',texto:s})}else it+=x[0].transcript}enviar({k:'interim',texto:it})};
     rec.onstart=()=>enviar({k:'estado',texto:'transcripción activa',voz:'on'});
