@@ -6,7 +6,7 @@ window.BANCO = [
   // ---------- Navegación general ----------
   { id: 'N1', area: 'Navegación', perfil: 'Todos', escenario: 'Estás en la página de un valle. Vuelve a la página de inicio.', criterio: 'Vuelve a la landing con el logo, "Inicio" o el menú', exito: '329:16266', ruta: 'Valle › Logo o Inicio › Landing' },
   { id: 'N2', area: 'Navegación', perfil: 'Todos', escenario: 'Quieres ver todas las experiencias disponibles. Llega a esa sección usando el menú.', criterio: 'Abre Explorar › Experiencias desde el menú', exito: '680:5000', ruta: 'Menú › Experiencias' },
-  { id: 'N3', area: 'Navegación', perfil: 'Todos', escenario: 'Bajaste hasta el final de la página. Vuelve arriba sin hacer scroll.', criterio: 'Usa el botón "↑ Arriba"', exito: '', ruta: 'Botón flotante ↑ Arriba' },
+  { id: 'N3', area: 'Navegación', perfil: 'Todos', escenario: 'Bajaste hasta el final de la página. Vuelve arriba sin hacer scroll.', criterio: 'Usa el botón "↑ Arriba"', exito: '', exitoClic: ['639:12363', '709:7351', '734:9243'], ruta: 'Botón flotante ↑ Arriba' },
   { id: 'N4', area: 'Navegación', perfil: 'Celular y tablet', escenario: 'Abre el menú del sitio, revisa las secciones y ciérralo.', criterio: 'Abre y cierra la hoja del menú', exito: '', ruta: '☰ Menú › ✕' },
   { id: 'N5', area: 'Navegación', perfil: 'Todos', escenario: 'Estás viendo experiencias. Cambia a ver los packs sin volver al inicio.', criterio: 'Usa las pestañas de Explorar', exito: '680:5604', ruta: 'Explorar › pestaña Packs' },
   // ---------- Búsqueda ----------

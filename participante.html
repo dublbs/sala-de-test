@@ -17,6 +17,7 @@ button{font:inherit;cursor:pointer}
 .btn:disabled{opacity:.45;cursor:default}
 .capa{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow:auto;background:rgba(18,16,25,.72);z-index:20}
 .capa.off{display:none}
+.avisonav{background:#fff4e5;border:1px solid #f0c27a;border-radius:12px;padding:12px 14px;margin:12px 0;font-size:14px}.avisonav p{margin:4px 0 10px}.avisonav .suave{font-size:13px;color:#6b6478}.avisonav button{font:inherit;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid #c9c2d6;background:#fff;cursor:pointer;min-height:44px}
 .tarjeta{margin:auto 0;background:#fff;border-radius:20px;padding:32px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .tarjeta h1{font-size:26px;color:var(--marca);margin:0 0 10px}
 .tarjeta h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#665e7c;margin:0 0 8px;font-weight:500}
@@ -65,6 +66,7 @@ button{font:inherit;cursor:pointer}
 <div class="capa" id="cBien"><div class="tarjeta bien"><div class="intro">
   <h2>Prueba de prototipo</h2>
   <h1>Hola 👋 Gracias por ayudarnos</h1>
+  <div class="avisonav" id="avisoNav" style="display:none"><b id="avisoNavT"></b><p id="avisoNavP"></p><button type="button" class="sec" id="bCopiaLink">Copiar link</button> <span class="suave">o sigue aquí si no tienes cómo.</span></div>
   <p class="eno"><b>¿Qué es el enoturismo?</b> Es viajar para conocer el mundo del vino: visitar viñas y valles, hacer catas y recorridos por los viñedos, y participar en fiestas de la vendimia, la época de la cosecha de la uva.</p>
   <p>Vas a probar el prototipo de un sitio que reúne estas experiencias en Chile. Te daremos <b id="nT">3</b> tareas cortas. No hay respuestas correctas: estamos probando el diseño, no a ti.</p>
   <ul>
@@ -74,7 +76,7 @@ button{font:inherit;cursor:pointer}
   </ul>
   </div><div class="form"><div class="datos">
     <h2 style="margin-top:6px">Tus datos</h2>
-    <label>Nombre o alias *<input id="dAlias" maxlength="40" autocomplete="off" placeholder="Como quieras que te llamemos"></label>
+    <label>Nombre y apellido *<input id="dAlias" maxlength="60" autocomplete="name" placeholder="Ej.: Camila Rojas"></label>
     <div class="dos"><label>Edad<select id="dEdad"><option value="">Prefiero no decir</option><option>18 a 24</option><option>25 a 34</option><option>35 a 44</option><option>45 a 54</option><option>55 a 64</option><option>65 o más</option></select></label>
     <label>Ocupación<input id="dOcu" maxlength="60" placeholder="Ej.: estudiante, diseñadora"></label></div>
     <div class="dos"><label>¿Cuánto usas internet?<select id="dTec"><option value="Alta">Mucho (todos los días, sin problemas)</option><option value="Media" selected>Lo normal</option><option value="Baja">Poco (me cuesta un poco)</option></select></label>
@@ -151,9 +153,15 @@ const esMovil=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh
 // nombre del navegador para quien modera (Edge, Opera y Samsung van antes que Chrome porque su UA también dice Chrome)
 const NAV=(()=>{const u=navigator.userAgent;if(/Edg\//.test(u))return 'Edge';if(/OPR\//.test(u))return 'Opera';if(/SamsungBrowser/.test(u))return 'Samsung Internet';if(/Firefox|FxiOS/.test(u))return 'Firefox';if(navigator.brave)return 'Brave';if(/CriOS/.test(u))return 'Chrome iOS';if(/Chrome\//.test(u))return 'Chrome';if(/Safari\//.test(u))return 'Safari';return 'otro'})();
 const esTactil=(navigator.maxTouchPoints||0)>0&&matchMedia('(pointer: coarse)').matches;
-if(SID&&(!esChrome||esMovil))$('#estBien').textContent=esMovil?'Estás en un celular o tablet: podrás hacer las tareas, pero no compartir la pantalla.':'Te recomendamos usar Google Chrome para que todo funcione.';
-const okForm=()=>{$('#bConectar').disabled=!($('#acepto').checked&&$('#dAlias').value.trim())};$('#acepto').onchange=okForm;$('#dAlias').addEventListener('input',okForm);
-const datos=()=>({alias:$('#dAlias').value.trim(),edad:$('#dEdad').value,ocupacion:$('#dOcu').value.trim(),tecnologia:$('#dTec').value,enoturismo:$('#dEno').value});
+// Para que el registro quede completo (clics, mapa de calor, voz transcrita y pantalla) se necesita un computador con Chrome o Edge
+const COMPLETO=!esMovil&&esChrome&&!navigator.brave;
+if(SID&&!COMPLETO){const a=$('#avisoNav');a.style.display='block';
+  $('#avisoNavT').textContent=esMovil?'Ábrelo mejor en un computador':'Ábrelo mejor en Google Chrome';
+  $('#avisoNavP').textContent=esMovil?'En celular o tablet no se puede compartir la pantalla y Figma puede no avisar dónde tocas, así que el registro queda incompleto. Copia el link y ábrelo en un computador con Google Chrome (o Edge).':'En este navegador ('+NAV+') no se transcribe la voz. Copia el link y ábrelo en Google Chrome (o Edge) para que la prueba quede completa.';
+  $('#bCopiaLink').onclick=async()=>{const u=location.href;try{await navigator.clipboard.writeText(u);$('#bCopiaLink').textContent='Link copiado ✓'}catch(e){prompt('Copia este link:',u)}}}
+const nombreOk=()=>$('#dAlias').value.trim().split(/\s+/).filter(w=>w.length>1).length>=2;
+const okForm=()=>{$('#bConectar').disabled=!($('#acepto').checked&&nombreOk())};$('#acepto').onchange=okForm;$('#dAlias').addEventListener('input',okForm);
+const datos=()=>({alias:$('#dAlias').value.trim().replace(/\s+/g,' '),nombre:$('#dAlias').value.trim().replace(/\s+/g,' '),edad:$('#dEdad').value,ocupacion:$('#dOcu').value.trim(),tecnologia:$('#dTec').value,enoturismo:$('#dEno').value});
 
 /* ---------- conexión ---------- */
 let peer=null,conn=null,stream=null,listo=false,cola=[],cfgRes=null;const cfgListo=new Promise(r=>{cfgRes=r;if(CFG)r()});
@@ -209,7 +217,10 @@ function montar(){const e=$('#escena');e.className='on'+(CFG.dev==='movil'?' mov
 function reiniciar(){if(fig)fig.contentWindow.postMessage({type:'RESTART'},'https://embed.figma.com')}
 window.addEventListener('message',e=>{if(e.origin!=='https://www.figma.com'&&e.origin!=='https://embed.figma.com')return;const d=e.data;if(!d||!d.type)return;figOk=true;FTIP[d.type]=(FTIP[d.type]||0)+1;
   enviar({k:'figma',type:d.type,data:d.data||{}});
-  if(d.type==='PRESENTED_NODE_CHANGED'&&actual!=null&&!cerrada){const tk=CFG.tareas[actual];if((tk.exito||[]).includes(d.data.presentedNodeId))terminar('Completada',true)}});
+  if(d.type==='PRESENTED_NODE_CHANGED'&&actual!=null&&!cerrada){const tk=CFG.tareas[actual];if((tk.exito||[]).includes(d.data.presentedNodeId))terminar('Completada',true)}
+  if(d.type==='MOUSE_PRESS_OR_RELEASE'&&d.data&&d.data.handled&&actual!=null&&!cerrada){const tk=CFG.tareas[actual],c=tk.exitoClic||[];if(c.length&&clicEn(d.data.targetNodeId,c))terminar('Completada',true)}});
+// ¿el nodo tocado es (o está dentro de) alguno de los botones de éxito? Los ids de instancias son rutas "I<inst>;<hijo>;…"
+function clicEn(id,lista){if(!id)return false;const sg=String(id).split(';');for(let i=sg.length;i>0;i--){const k=sg.slice(0,i).join(';');if(lista.includes(k)||lista.includes(k.replace(/^I/,'')))return true}return false}
 
 /* ---------- tareas ---------- */
 let actual=null,cerrada=true;

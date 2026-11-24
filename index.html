@@ -236,13 +236,13 @@ iframe.fondo{position:absolute;border:0;pointer-events:none;opacity:.38;z-index:
   <div class="part paso" data-sec="part">
     <div class="card" id="cardPart"><div class="hd"><label>Participante</label></div>
       <div class="grid4">
-        <div><label for="pAlias">Nombre o alias</label><input type="text" id="pAlias" value="P1"></div>
+        <div><label for="pAlias">Nombre y apellido</label><input type="text" id="pAlias" value="P1"></div>
         <div><label for="pPerfil">Edad y ocupación</label><input type="text" id="pPerfil" placeholder="ej. 34 años, profesora"></div>
         <div><label for="pTec">Familiaridad tecnológica</label><select id="pTec"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>
         <div><label for="pMod">Modalidad</label><select id="pMod"><option>Presencial</option><option>Remota (llamada compartiendo pantalla)</option></select></div>
       </div>
     </div>
-    <div class="card" id="cardPartRem" style="display:none"><div class="hd"><label>Participante</label></div><p class="help" style="margin:0">En remoto, el participante escribe sus datos (alias, edad, ocupación, familiaridad con la tecnología y experiencia con el enoturismo) al abrir el link. Aparecen en el registro y en su ficha.</p></div>
+    <div class="card" id="cardPartRem" style="display:none"><div class="hd"><label>Participante</label></div><p class="help" style="margin:0">En remoto, el participante escribe sus datos (nombre y apellido, edad, ocupación, familiaridad con la tecnología y experiencia con el enoturismo) al abrir el link. Aparecen en el registro y en su ficha.</p></div>
   </div>
   <div class="card tasks paso" data-sec="tar">
     <div class="hd"><label>Tareas <span class="cuenta">2 a 3 escenarios + exploración libre</span></label><button class="btn sec chico" id="bBanco" type="button"><span class="largo">Banco de tareas</span><span class="corto">Banco</span> (<span id="nBanco">0</span>)</button></div>
@@ -385,7 +385,7 @@ Object.entries({...EQUIV}).forEach(([a,b])=>EQUIV[b]=EQUIV[b]||a);
 const M2T={"685:5845":"734:9133","685:5846":"734:9364","685:5847":"734:9522","685:5848":"734:9820","685:5849":"734:9901","725:7551":"734:9943","725:7630":"734:10005","725:7704":"734:10068","685:5850":"734:10133","709:9321":"734:10149","685:5985":"734:10165","685:5884":"734:10178","685:5906":"734:10190","685:5929":"734:10211","685:5953":"734:10224","685:5965":"734:10234","685:6012":"734:10250","686:6004":"734:10257","686:6011":"734:10277","706:9549":"734:10286","706:9561":"734:10295","709:9373":"734:10304","723:7391":"734:10313","723:7400":"734:10322","709:7304":"803:10564"};
 const exitoIds=t=>{if(!t.exito)return [];const m=EQUIV[t.exito];return [t.exito,m,m&&M2T[m],M2T[t.exito]].filter(Boolean)};
 const opcionesExito=sel=>'<option value="">— sin pantalla de éxito —</option>'+Object.entries(M.S).filter(([id,n])=>!/^(Móvil|Tablet)/.test(n)).map(([id,n])=>`<option value="${id}"${id===sel?' selected':''}>${esc(n)}</option>`).join('');
-function tareasDef(){const B=window.BANCO||[];const r=(window.BANCO_RECOMENDADAS||[]).map(id=>B.find(t=>t.id===id)).filter(Boolean);return r.length?r.map(t=>({id:t.id,escenario:t.escenario,criterio:t.criterio,exito:t.exito||''})):TAREAS_DEF}
+function tareasDef(){const B=window.BANCO||[];const r=(window.BANCO_RECOMENDADAS||[]).map(id=>B.find(t=>t.id===id)).filter(Boolean);return r.length?r.map(t=>({id:t.id,escenario:t.escenario,criterio:t.criterio,exito:t.exito||'',exitoClic:t.exitoClic||undefined})):TAREAS_DEF}
 function renderTaskEditor(){let saved=JSON.parse(store.get('sala.tareas')||'null');if(saved&&saved.length===3&&saved.map(t=>t.id).join()==='T1,T2,T3'&&saved.every((t,i)=>t.escenario===TAREAS_DEF[i].escenario)){saved=null;store.set('sala.tareas','')}if(saved&&saved.map(t=>t.id).join()==='V4,F2,P2'){saved=null;store.set('sala.tareas','')}saved=saved||tareasDef();$('#taskEd').innerHTML=saved.map((t,i)=>`<div class="t"><input type="text" value="${esc(t.id)}" data-i="${i}" data-k="id"><textarea data-i="${i}" data-k="escenario">${esc(t.escenario)}</textarea><textarea data-i="${i}" data-k="criterio">${esc(t.criterio)}</textarea><select data-i="${i}" data-k="exito" title="Pantalla de éxito">${opcionesExito(t.exito!==undefined?t.exito:(EXITO_DEF[t.id]||''))}</select></div>`).join('')}
 function readTasks(){const arr=[];document.querySelectorAll('#taskEd .t').forEach(row=>{const o={};row.querySelectorAll('[data-k]').forEach(el=>o[el.dataset.k]=el.value.trim());if(o.id&&o.escenario)arr.push(o)});store.set('sala.tareas',JSON.stringify(arr));return arr}
 document.querySelectorAll('.pasos button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pasos button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.setup .paso').forEach(x=>x.classList.toggle('on',x.dataset.sec===b.dataset.sec))});
@@ -419,13 +419,13 @@ if(store.get('sala.url'))$('#cUrl').value=store.get('sala.url');
 /* ================= banco de tareas ================= */
 function renderBanco(){const B=window.BANCO||[];$('#nBanco').textContent=B.length;const rec=new Set(window.BANCO_RECOMENDADAS||[]);const act=new Set((JSON.parse(store.get('sala.tareas')||'null')||tareasDef()).map(t=>t.id));
   let html='',area='';for(const t of B){if(t.area!==area){area=t.area;html+=`<div class="banco-area">${esc(area)}</div>`}
-    html+=`<label class="banco-item"><input type="checkbox" value="${esc(t.id)}" ${act.has(t.id)?'checked':''}><b>${esc(t.id)}${rec.has(t.id)?' ★':''}</b><span>${esc(t.escenario)}<small>Éxito: ${esc(t.criterio)} · ${t.exito?'se marca sola al llegar a '+esc(nombrePantalla(t.exito)):'se marca a mano'} · Ruta: ${esc(t.ruta)} · Perfil: ${esc(t.perfil)}</small></span></label>`}
+    html+=`<label class="banco-item"><input type="checkbox" value="${esc(t.id)}" ${act.has(t.id)?'checked':''}><b>${esc(t.id)}${rec.has(t.id)?' ★':''}</b><span>${esc(t.escenario)}<small>Éxito: ${esc(t.criterio)} · ${t.exito?'se marca sola al llegar a '+esc(nombrePantalla(t.exito)):t.exitoClic?'se marca sola al usar ese botón':'se marca a mano'} · Ruta: ${esc(t.ruta)} · Perfil: ${esc(t.perfil)}</small></span></label>`}
   $('#bancoLista').innerHTML=html;contarSel()}
 function contarSel(){const n=document.querySelectorAll('#bancoLista input:checked').length;$('#bancoSel').textContent=n+' seleccionada(s)'+(n>3?' · la pauta pide 2 o 3':'')}
 $('#bancoLista').addEventListener('change',contarSel);
 $('#bBanco').onclick=()=>{const b=$('#banco');b.hidden=!b.hidden;if(!b.hidden)renderBanco()};
 $('#bancoCerrar').onclick=()=>{$('#banco').hidden=true};
-$('#bancoUsar').onclick=()=>{const ids=[...document.querySelectorAll('#bancoLista input:checked')].map(i=>i.value);if(!ids.length)return;const B=window.BANCO||[];const arr=ids.map(id=>B.find(t=>t.id===id)).map(t=>({id:t.id,escenario:t.escenario,criterio:t.criterio,exito:t.exito||''}));store.set('sala.tareas',JSON.stringify(arr));renderTaskEditor();$('#banco').hidden=true};
+$('#bancoUsar').onclick=()=>{const ids=[...document.querySelectorAll('#bancoLista input:checked')].map(i=>i.value);if(!ids.length)return;const B=window.BANCO||[];const arr=ids.map(id=>B.find(t=>t.id===id)).map(t=>({id:t.id,escenario:t.escenario,criterio:t.criterio,exito:t.exito||'',exitoClic:t.exitoClic||undefined}));store.set('sala.tareas',JSON.stringify(arr));renderTaskEditor();$('#banco').hidden=true};
 setTimeout(()=>{$('#nBanco').textContent=(window.BANCO||[]).length},0);
 /* ================= versión del prototipo (3 tarjetas) ================= */
 function devUI(){const v=$('#cDev').value,auto=v==='auto';$('#cDevAuto').checked=auto;$('.devs').classList.toggle('auto',auto);
@@ -489,7 +489,7 @@ function onFigma(type,d){
     if(d.presentedNodeId&&d.presentedNodeId!==S.pantalla){S.pantalla=d.presentedNodeId;updateNow()}
     let el=nombreElemento(d.targetNodeId);if(/^elemento |^zona sin/.test(el)){const z=zonaDe(d);if(z)el=z}
     ev('clic',{fuente:'figma',respuesta:!!d.handled,id:d.targetNodeId||null,elemento:d.handled?el:('cerca de '+el),pos:d.targetNodeMousePosition||null});
-    if(window.Calor)S.calor.push(Calor.desde(d,{t:now(),tarea:S.actual,s:d.presentedNodeId||S.pantalla}));renderTasks();renderHeat();return}
+    if(window.Calor)S.calor.push(Calor.desde(d,{t:now(),tarea:S.actual,s:d.presentedNodeId||S.pantalla}));if(d.handled)exitoClicLocal(d.targetNodeId);renderTasks();renderHeat();return}
   if(type==='NEW_STATE'){ev('estado',{id:d.nodeId,elemento:nombreElemento(d.nodeId),temporizado:!!d.isTimedChange});return}
   if(type==='LOGIN_SCREEN_SHOWN'||type==='PASSWORD_SCREEN_SHOWN'){ev('sistema',{texto:'Figma pidió '+(type.startsWith('LOGIN')?'iniciar sesión':'contraseña')})}
 }
@@ -637,7 +637,7 @@ function vozResumen(ses,a,b){const txt=(ses.voz||[]).filter(v=>v.t>=a&&v.t<=b).m
 function fichaRows(ses){
   const p=ses.participante;const ts=ses.tareas.filter(t=>t.inicio!=null&&!esLibre(t));const lb=ses.tareas.find(t=>esLibre(t)&&t.inicio!=null);
   const filas=[
-    ['Nombre / Alias del participante',p.alias],
+    ['Nombre y apellido',p.nombre||p.alias],
     ['Perfil del usuario (edad, ocupación, nivel de familiaridad tecnológica)',[p.perfil,'familiaridad '+p.tecnologia.toLowerCase()].filter(Boolean).join(' · ')],
     ['Fecha y modalidad del testeo',p.fecha+' · '+p.modalidad+' · '+(ses.dispositivo==='movil'?'móvil':'escritorio')],
     ['Tareas asignadas',ts.map(t=>t.id+': '+t.escenario).join('\n')],
@@ -768,6 +768,7 @@ $('#dlComb').onclick=()=>download('matriz-consolidada.csv',csv(tableRows('#tComb
 /* ================= alto de la barra (responsivo) ================= */
 (()=>{const t=document.querySelector('.top');const f=()=>document.documentElement.style.setProperty('--topH',t.offsetHeight+'px');f();try{new ResizeObserver(f).observe(t)}catch(e){window.addEventListener('resize',f)}})();
 /* ================= éxito automático (presencial) ================= */
+function exitoClicLocal(id){if(!S||S.remoto||!S.actual||!id)return;const tk=S.tareas.find(t=>t.id===S.actual);const l=(tk&&tk.exitoClic)||[];if(!l.length)return;const sg=String(id).split(';');let ok=false;for(let i=sg.length;i>0&&!ok;i--){const k=sg.slice(0,i).join(';');ok=l.includes(k)||l.includes(k.replace(/^I/,''))}if(!ok)return;tk.fin=now();tk.resultado='Completada';ev('moderador',{texto:tk.id+' · Completada (usó '+nombreElemento(id)+')'});S.actual=null;renderTasks()}
 function exitoLocal(id){if(!S||S.remoto||!S.actual)return;const tk=S.tareas.find(t=>t.id===S.actual);if(!tk||!exitoIds(tk).includes(id))return;tk.fin=now();tk.resultado='Completada';ev('moderador',{texto:tk.id+' · Completada (llegó a '+nombrePantalla(id)+')'});S.actual=null;renderTasks()}
 
 /* ================= mapa de calor ================= */
@@ -816,7 +817,7 @@ $('#dlCalorC').onclick=()=>pngDe($('#cCanvas'),`calor-consolidado-${(nombrePanta
 /* ================= modalidad remota (link) ================= */
 let peer=null,conn=null,llamada=null;
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-function linkParticipante(){const cfg={v:1,peer:S.peerId,url:$('#cUrl').value.trim(),cid:$('#cCid').value.trim(),dev:S.dispositivo,inicioM:M.inicio.movil,inicioE:M.inicio.escritorio,inicioT:M.inicio.tablet,voz:$('#cVoz').value,inicio:M.inicio[S.dispositivo]||M.inicio.escritorio,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,exito:exitoIds(t),libre:esLibre(t)||undefined,min:t.min}))};
+function linkParticipante(){const cfg={v:1,peer:S.peerId,url:$('#cUrl').value.trim(),cid:$('#cCid').value.trim(),dev:S.dispositivo,inicioM:M.inicio.movil,inicioE:M.inicio.escritorio,inicioT:M.inicio.tablet,voz:$('#cVoz').value,inicio:M.inicio[S.dispositivo]||M.inicio.escritorio,tareas:S.tareas.map(t=>({id:t.id,escenario:t.escenario,exito:exitoIds(t),exitoClic:t.exitoClic||undefined,libre:esLibre(t)||undefined,min:t.min}))};
   S.cfgPart=cfg;return new URL('participante.html',location.href).href.split('#')[0].split('?')[0]+'#s='+S.peerId}
 function montarRemoto(st){st.innerHTML=`<div class="remote"><video id="rv" autoplay playsinline></video>
   <div class="wait" id="rwait"><b id="rwT">Preparando la conexión…</b><p id="rwP">Un momento.</p>
@@ -856,7 +857,7 @@ function onRemoto(m){if(!S||!m||typeof m!=='object')return;
     if(m.accion==='inicio'){if(S.actual&&S.actual!==tk.id){const c=S.tareas.find(t=>t.id===S.actual);if(c&&!c.fin){c.fin=now();c.resultado=c.resultado||'Sin cerrar'}}tk.inicio=now();tk.fin=null;tk.resultado=null;S.actual=tk.id;ev('moderador',{texto:'Inicio '+tk.id+' (participante)'})}
     else{tk.fin=now();tk.resultado=m.resultado;ev('moderador',{texto:tk.id+' · '+m.resultado+(m.auto?' (llegó a la pantalla de éxito)':' (lo indicó el participante)')});S.actual=null}
     renderTasks();return}
-  if(m.k==='perfil'&&m.datos){const d=m.datos,p=S.participante;p.alias=(d.alias||'Participante').slice(0,40);p.perfil=[d.edad?d.edad+' años':'',d.ocupacion,d.enoturismo?'enoturismo: '+d.enoturismo.toLowerCase():''].filter(Boolean).join(' · ');p.tecnologia=d.tecnologia||p.tecnologia;ev('sistema',{texto:'Datos del participante: '+p.alias+(p.perfil?' · '+p.perfil:'')+' · tecnología '+(p.tecnologia||'').toLowerCase()});return}
+  if(m.k==='perfil'&&m.datos){const d=m.datos,p=S.participante;p.alias=(d.alias||'Participante').slice(0,60);p.nombre=d.nombre||d.alias||'';p.perfil=[d.edad?d.edad+' años':'',d.ocupacion,d.enoturismo?'enoturismo: '+d.enoturismo.toLowerCase():''].filter(Boolean).join(' · ');p.tecnologia=d.tecnologia||p.tecnologia;ev('sistema',{texto:'Datos del participante: '+p.alias+(p.perfil?' · '+p.perfil:'')+' · tecnología '+(p.tecnologia||'').toLowerCase()});return}
   if(m.k==='seq'){const tk=S.tareas.find(t=>t.id===m.id);if(tk){if(m.valor!=null)tk.seq=m.valor;tk.seqComentario=m.comentario||'';ev('voz',{texto:'['+(esLibre(tk)?'Exploración libre · comentario':tk.id+' · facilidad '+m.valor+'/7')+']'+(m.comentario?' '+m.comentario:'')});renderTasks()}return}
   if(m.k==='fin'){ev('sistema',{texto:'El participante terminó todas las tareas'});const a=$('#avisoFin');a.style.display='block';a.innerHTML='<b>El participante terminó.</b> Presiona "Terminar sesión" para ver la ficha, la matriz y el mapa de calor.';return}
 }
